@@ -1,1 +1,160 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - Host Kuis</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    
+    <script src="firebase-config.js"></script>
 
+    <style>
+        /* v1.0: CSS kustom dasar untuk mengelola visibilitas antarmuka */
+        .hidden-section {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen flex items-center justify-center p-4">
+
+    <div id="loginSection" class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+        <h2 class="text-2xl font-bold text-center text-indigo-600 mb-6">Login Guru</h2>
+        <form id="loginForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Masukkan PIN Anda (4 Digit)</label>
+                <input type="password" id="loginPin" maxlength="4" required class="mt-1 w-full p-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-center text-2xl tracking-widest">
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-md transition">
+                Masuk ke Dashboard
+            </button>
+            <p id="loginError" class="text-red-500 text-sm text-center hidden-section">PIN tidak ditemukan atau salah.</p>
+        </form>
+    </div>
+
+    <div id="dashboardSection" class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl hidden-section">
+        <div class="flex justify-between items-center mb-6 border-b pb-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Dashboard Host Kuis</h1>
+                <p class="text-sm text-gray-500">Selamat datang, <span id="teacherNameDisplay" class="font-bold text-indigo-600">Guru</span></p>
+            </div>
+            <button onclick="logout()" class="text-sm bg-red-100 text-red-600 hover:bg-red-200 py-2 px-4 rounded-md font-semibold">Keluar</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-indigo-50 p-6 rounded-lg border border-indigo-100 text-center">
+                <h3 class="text-lg font-semibold text-indigo-800 mb-2">Mulai Kuis Baru</h3>
+                <p class="text-sm text-gray-600 mb-4">Buat ruang baru agar siswa bisa bergabung.</p>
+                <button id="btnCreateRoom" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition w-full">
+                    Buat Ruang Kuis (Generate PIN)
+                </button>
+            </div>
+
+            <div class="bg-green-50 p-6 rounded-lg border border-green-100 text-center flex flex-col justify-center">
+                <h3 class="text-sm font-semibold text-green-800 mb-1">PIN RUANGAN AKTIF</h3>
+                <div id="activeRoomPinDisplay" class="text-5xl font-black text-green-600 tracking-widest">- - - - -</div>
+                <p id="roomStatusText" class="text-sm text-gray-600 mt-2">Belum ada ruangan yang dibuat.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // v1.0: Deklarasi Variabel DOM
+        const loginSection = document.getElementById('loginSection');
+        const dashboardSection = document.getElementById('dashboardSection');
+        const loginForm = document.getElementById('loginForm');
+        const loginError = document.getElementById('loginError');
+        const teacherNameDisplay = document.getElementById('teacherNameDisplay');
+        const btnCreateRoom = document.getElementById('btnCreateRoom');
+        const activeRoomPinDisplay = document.getElementById('activeRoomPinDisplay');
+        const roomStatusText = document.getElementById('roomStatusText');
+
+        // v1.0: State Management (Menyimpan data guru yang sedang login)
+        let currentTeacherId = null;
+        let currentTeacherName = null;
+
+        // v1.0: Fungsi Login Guru berbasis PIN
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const inputPin = document.getElementById('loginPin').value;
+            
+            // Mengambil data dari node 'users/teachers'
+            db.ref('users/teachers').once('value')
+                .then((snapshot) => {
+                    let loginSuccess = false;
+                    
+                    if (snapshot.exists()) {
+                        snapshot.forEach((child) => {
+                            const data = child.val();
+                            // Validasi jika PIN cocok
+                            if (data.pin === inputPin) {
+                                loginSuccess = true;
+                                currentTeacherId = child.key;
+                                currentTeacherName = data.name;
+                            }
+                        });
+                    }
+
+                    if (loginSuccess) {
+                        // Transisi UI dari Login ke Dashboard
+                        loginSection.classList.add('hidden-section');
+                        dashboardSection.classList.remove('hidden-section');
+                        teacherNameDisplay.innerText = currentTeacherName;
+                        loginError.classList.add('hidden-section');
+                    } else {
+                        loginError.classList.remove('hidden-section');
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error membaca data Firebase:", error);
+                    alert("Terjadi kesalahan sistem saat login.");
+                });
+        });
+
+        // v1.0: Fungsi Logout Guru
+        function logout() {
+            currentTeacherId = null;
+            currentTeacherName = null;
+            document.getElementById('loginPin').value = '';
+            dashboardSection.classList.add('hidden-section');
+            loginSection.classList.remove('hidden-section');
+        }
+
+        // v1.0: Fungsi Membuat Ruangan (Room) dan Generate 5 Digit PIN Kuis
+        btnCreateRoom.addEventListener('click', () => {
+            // Generate angka acak 5 digit (antara 10000 - 99999)
+            const roomPin = Math.floor(10000 + Math.random() * 90000).toString();
+            
+            // v1.0: Data awal untuk node ruangan baru
+            const roomData = {
+                hostId: currentTeacherId,
+                status: "waiting", // status: waiting (lobby), playing, finished
+                createdAt: firebase.database.ServerValue.TIMESTAMP,
+                // Di v2.0 nanti kita akan tautkan dengan ID Soal yang dipilih
+                quizId: "dummy_quiz_001" 
+            };
+
+            // Menyimpan data ke Firebase di node 'rooms/PIN'
+            db.ref('rooms/' + roomPin).set(roomData)
+                .then(() => {
+                    // Update UI jika berhasil
+                    activeRoomPinDisplay.innerText = roomPin;
+                    roomStatusText.innerText = "Status: Menunggu siswa bergabung (Lobby)";
+                    
+                    // Menonaktifkan tombol agar tidak klik ganda
+                    btnCreateRoom.innerText = "Ruangan Aktif!";
+                    btnCreateRoom.disabled = true;
+                    btnCreateRoom.classList.replace('bg-indigo-600', 'bg-gray-400');
+                    btnCreateRoom.classList.remove('hover:bg-indigo-700');
+                })
+                .catch((error) => {
+                    console.error("Error membuat ruangan:", error);
+                    alert("Gagal membuat ruangan kuis.");
+                });
+        });
+    </script>
+</body>
+</html>
