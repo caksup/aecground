@@ -1,1 +1,128 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Superuser - Admin Kuis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    
+    <script src="firebase-config.js"></script>
+</head>
+<body class="bg-gray-100 font-sans">
 
+    <div class="container mx-auto p-6 max-w-4xl">
+        <div class="bg-indigo-600 text-white p-6 rounded-lg shadow-md mb-6">
+            <h1 class="text-2xl font-bold">Dashboard Superuser (SU)</h1>
+            <p class="text-sm opacity-80">Manajemen Data Guru dan Monitoring Sistem</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-lg shadow-md md:col-span-1">
+                <h2 class="text-lg font-semibold mb-4 text-gray-700">Tambah Guru Baru</h2>
+                <form id="teacherForm" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 uppercase">Nama Guru</label>
+                        <input type="text" id="teacherName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-indigo-500 focus:border-indigo-500" placeholder="Contoh: Ibu Siti Aminah">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 uppercase">PIN Login Guru (4 Digit)</label>
+                        <input type="text" id="teacherPin" maxlength="4" pattern="\d{4}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-indigo-500 focus:border-indigo-500" placeholder="Contoh: 1234">
+                    </div>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition duration-200">
+                        Simpan Guru
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-md md:col-span-2">
+                <h2 class="text-lg font-semibold mb-4 text-gray-700">Daftar Guru Terdaftar</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Guru</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PIN Login</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teacherTableBody" class="bg-white divide-y divide-gray-200 text-sm text-gray-600">
+                            <tr>
+                                <td colspan="4" class="px-6 py-4 text-center text-gray-400">Memuat data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('teacherForm');
+        const tableBody = document.getElementById('teacherTableBody');
+
+        // 1. FUNGSI INPUT DATA KE FIREBASE REALTIME DATABASE
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('teacherName').value;
+            const pin = document.getElementById('teacherPin').value;
+
+            // Generate ID otomatis (push) di node 'users/teachers'
+            const newTeacherRef = db.ref('users/teachers').push();
+            
+            newTeacherRef.set({
+                name: name,
+                pin: pin
+            }).then(() => {
+                alert('Guru berhasil ditambahkan!');
+                form.reset();
+            }).catch((error) => {
+                alert('Gagal menyimpan: ' + error.message);
+            });
+        });
+
+        // 2. FUNGSI MEMBACA DATA SECARA REALTIME DARI FIREBASE
+        db.ref('users/teachers').on('value', (snapshot) => {
+            tableBody.innerHTML = ''; // Kosongkan tabel sebelum di-update
+            
+            if (snapshot.exists()) {
+                snapshot.forEach((childSnapshot) => {
+                    const teacherId = childSnapshot.key;
+                    const teacherData = childSnapshot.val();
+
+                    // Buat baris tabel HTML
+                    const row = `
+                        <tr>
+                            <td class="px-6 py-4 font-mono text-xs text-gray-400">${teacherId}</td>
+                            <td class="px-6 py-4 font-medium text-gray-900">${teacherData.name}</td>
+                            <td class="px-6 py-4 font-mono font-bold text-indigo-600">${teacherData.pin}</td>
+                            <td class="px-6 py-4">
+                                <button onclick="hapusGuru('${teacherId}')" class="text-red-600 hover:text-red-900 font-semibold text-xs">Hapus</button>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            } else {
+                tableBody.innerHTML = `<tr><td colspan="4" class="px-6 py-4 text-center text-gray-400">Belum ada data guru.</td></tr>`;
+            }
+        });
+
+        // 3. FUNGSI HAPUS GURU
+        function hapusGuru(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus guru ini?')) {
+                db.ref('users/teachers/' + id).remove()
+                .then(() => {
+                    alert('Data guru berhasil dihapus.');
+                }).catch((error) => {
+                    alert('Gagal menghapus: ' + error.message);
+                });
+            }
+        }
+    </script>
+</body>
+  </html>
