@@ -3,126 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Superuser - Admin Kuis</title>
+    <title>Superuser - Admin Kuis Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-    
     <script src="firebase-config.js"></script>
+    <style>
+        .tab-content { display: none; }
+        .tab-active { display: block; }
+        .nav-active { background-color: #4f46e5; color: white; }
+    </style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-100 flex h-screen overflow-hidden font-sans">
 
-    <div class="container mx-auto p-6 max-w-4xl">
-        <div class="bg-indigo-600 text-white p-6 rounded-lg shadow-md mb-6">
-            <h1 class="text-2xl font-bold">Dashboard Superuser (SU)</h1>
-            <p class="text-sm opacity-80">Manajemen Data Guru dan Monitoring Sistem</p>
+    <aside class="w-64 bg-white shadow-xl flex flex-col">
+        <div class="p-6 border-b border-gray-200">
+            <h1 class="text-2xl font-black text-indigo-700">SU Panel</h1>
+            <p class="text-xs text-gray-500 mt-1">Sistem Quiz Multiplayer</p>
         </div>
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <button onclick="switchTab('menu-guru', this)" class="nav-btn nav-active w-full text-left px-4 py-3 rounded-lg text-sm font-semibold text-gray-700 hover:bg-indigo-50 transition">1. Manajemen Guru</button>
+            <button onclick="switchTab('menu-soal', this)" class="nav-btn w-full text-left px-4 py-3 rounded-lg text-sm font-semibold text-gray-700 hover:bg-indigo-50 transition">2. Manajemen Soal</button>
+            <button onclick="switchTab('menu-setting', this)" class="nav-btn w-full text-left px-4 py-3 rounded-lg text-sm font-semibold text-gray-700 hover:bg-indigo-50 transition">3. Sistem Setting</button>
+            <button onclick="switchTab('menu-riwayat', this)" class="nav-btn w-full text-left px-4 py-3 rounded-lg text-sm font-semibold text-gray-700 hover:bg-indigo-50 transition">4. Riwayat & Laporan</button>
+            <button onclick="switchTab('menu-versi', this)" class="nav-btn w-full text-left px-4 py-3 rounded-lg text-sm font-semibold text-gray-700 hover:bg-indigo-50 transition">5. Versi Aplikasi</button>
+        </nav>
+    </aside>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white p-6 rounded-lg shadow-md md:col-span-1">
-                <h2 class="text-lg font-semibold mb-4 text-gray-700">Tambah Guru Baru</h2>
-                <form id="teacherForm" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-medium text-gray-500 uppercase">Nama Guru</label>
-                        <input type="text" id="teacherName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-indigo-500 focus:border-indigo-500" placeholder="Contoh: Ibu Siti Aminah">
+    <main class="flex-1 p-8 overflow-y-auto">
+        
+        <div id="menu-guru" class="tab-content tab-active">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Manajemen Guru</h2>
+            
+            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                <h3 class="text-lg font-semibold mb-4 border-b pb-2">Tambah / Input Guru Baru</h3>
+                <form id="teacherForm" class="flex gap-4 items-end">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Nama Guru</label>
+                        <input type="text" id="tName" required class="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-400">
                     </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-500 uppercase">PIN Login Guru (4 Digit)</label>
-                        <input type="text" id="teacherPin" maxlength="4" pattern="\d{4}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border focus:ring-indigo-500 focus:border-indigo-500" placeholder="Contoh: 1234">
+                    <div class="w-32">
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">PIN (4 Digit)</label>
+                        <input type="text" id="tPin" maxlength="4" pattern="\d{4}" required class="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-400">
                     </div>
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition duration-200">
-                        Simpan Guru
-                    </button>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded">Simpan</button>
                 </form>
             </div>
 
-            <div class="bg-white p-6 rounded-lg shadow-md md:col-span-2">
-                <h2 class="text-lg font-semibold mb-4 text-gray-700">Daftar Guru Terdaftar</h2>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Guru</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PIN Login</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="teacherTableBody" class="bg-white divide-y divide-gray-200 text-sm text-gray-600">
-                            <tr>
-                                <td colspan="4" class="px-6 py-4 text-center text-gray-400">Memuat data...</td>
-                            </tr>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-lg font-semibold mb-4 border-b pb-2">Daftar Guru Terdaftar</h3>
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-600 text-sm">
+                            <th class="p-3">Nama Guru</th>
+                            <th class="p-3">PIN Login</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3 text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teacherTableBody" class="text-sm divide-y">
                         </tbody>
-                    </table>
+                </table>
+            </div>
+        </div>
+
+        <div id="menu-soal" class="tab-content">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Manajemen Soal</h2>
+            <div class="bg-white p-6 rounded-lg shadow border-l-4 border-indigo-500 mb-4">
+                <h3 class="font-bold">A. Buat Soal Baru</h3>
+                <p class="text-sm text-gray-500">Fitur form pembuat soal (Bisa set waktu per soal). Akan kita kembangkan di tahap selanjutnya.</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
+                <h3 class="font-bold">B. Riwayat Bank Soal</h3>
+                <p class="text-sm text-gray-500">Daftar soal yang sudah dibuat, bisa di-klik untuk dijadikan kuis baru.</p>
+            </div>
+        </div>
+
+        <div id="menu-setting" class="tab-content">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Sistem Setting</h2>
+            <div class="bg-white p-6 rounded-lg shadow space-y-6">
+                <div>
+                    <label class="block font-bold mb-2">Info Halaman Login</label>
+                    <textarea class="w-full border rounded p-2 text-sm" rows="2" placeholder="Teks yang muncul di halaman login siswa/guru..."></textarea>
+                </div>
+                <div>
+                    <label class="block font-bold mb-2">Pengumuman di Header (Berjalan)</label>
+                    <input type="text" class="w-full border rounded p-2 text-sm" placeholder="Contoh: Kuis Semester Ganjil akan dimulai minggu depan...">
+                </div>
+                <button class="bg-indigo-600 text-white px-4 py-2 rounded text-sm font-bold">Simpan Pengaturan</button>
+            </div>
+        </div>
+
+        <div id="menu-riwayat" class="tab-content">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Riwayat & Statistik</h2>
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="bg-blue-100 p-4 rounded-lg shadow text-center">
+                    <h4 class="text-sm font-bold text-blue-800">Total Guru Berpartisipasi</h4>
+                    <span class="text-3xl font-black text-blue-600">0</span>
+                </div>
+                <div class="bg-green-100 p-4 rounded-lg shadow text-center">
+                    <h4 class="text-sm font-bold text-green-800">Total Siswa Main</h4>
+                    <span class="text-3xl font-black text-green-600">0</span>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="font-bold border-b pb-2 mb-4">Leaderboard Prestasi Global (Semua Sesi)</h3>
+                <p class="text-sm text-gray-500">Data belum tersedia.</p>
+            </div>
+        </div>
+
+        <div id="menu-versi" class="tab-content">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Timeline Versi Aplikasi</h2>
+            <div class="bg-white p-8 rounded-lg shadow">
+                <div class="relative border-l-2 border-indigo-500 ml-3 space-y-8">
+                    <div class="relative pl-6">
+                        <div class="absolute -left-2 top-1.5 w-4 h-4 bg-indigo-600 rounded-full border-2 border-white shadow"></div>
+                        <h3 class="font-bold text-lg text-indigo-700">Versi 2.0 (Pro)</h3>
+                        <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">Dalam Pengembangan</span>
+                        <p class="text-sm text-gray-600 mt-2">Perombakan UI Superuser, penambahan supervisor guru, mode kuis ganda (moderasi/bebas), dan batasan waktu per soal.</p>
+                    </div>
+                    <div class="relative pl-6">
+                        <div class="absolute -left-2 top-1.5 w-4 h-4 bg-gray-400 rounded-full border-2 border-white shadow"></div>
+                        <h3 class="font-bold text-lg text-gray-700">Versi 1.0</h3>
+                        <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">6 July 2026</span>
+                        <p class="text-sm text-gray-600 mt-2">Versi pengujian awal. Implementasi login Guru, generator PIN Kuis 5 digit, dan koneksi realtime ke Lobby Siswa.</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+
+    </main>
 
     <script>
-        const form = document.getElementById('teacherForm');
-        const tableBody = document.getElementById('teacherTableBody');
+        // --- 1. LOGIKA TAB NAVIGASI ---
+        function switchTab(tabId, btnElement) {
+            // Sembunyikan semua konten tab
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('tab-active'));
+            // Hilangkan warna aktif dari semua tombol
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('nav-active', 'bg-indigo-600', 'text-white');
+                el.classList.add('text-gray-700');
+            });
+            
+            // Tampilkan tab yang dipilih
+            document.getElementById(tabId).classList.add('tab-active');
+            // Warnai tombol yang dipilih
+            btnElement.classList.remove('text-gray-700');
+            btnElement.classList.add('nav-active', 'bg-indigo-600', 'text-white');
+        }
 
-        // 1. FUNGSI INPUT DATA KE FIREBASE REALTIME DATABASE
-        form.addEventListener('submit', (e) => {
+        // --- 2. LOGIKA FIREBASE MANAJEMEN GURU ---
+        const tForm = document.getElementById('teacherForm');
+        const tTable = document.getElementById('teacherTableBody');
+        const teachersRef = db.ref('users/teachers');
+
+        // A. Tambah Guru
+        tForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            
-            const name = document.getElementById('teacherName').value;
-            const pin = document.getElementById('teacherPin').value;
+            const name = document.getElementById('tName').value;
+            const pin = document.getElementById('tPin').value;
 
-            // Generate ID otomatis (push) di node 'users/teachers'
-            const newTeacherRef = db.ref('users/teachers').push();
-            
-            newTeacherRef.set({
+            teachersRef.push({
                 name: name,
-                pin: pin
+                pin: pin,
+                isActive: true // v2.0: Default guru baru adalah aktif
             }).then(() => {
-                alert('Guru berhasil ditambahkan!');
-                form.reset();
-            }).catch((error) => {
-                alert('Gagal menyimpan: ' + error.message);
+                tForm.reset();
             });
         });
 
-        // 2. FUNGSI MEMBACA DATA SECARA REALTIME DARI FIREBASE
-        db.ref('users/teachers').on('value', (snapshot) => {
-            tableBody.innerHTML = ''; // Kosongkan tabel sebelum di-update
-            
+        // B. Tampilkan Data (Realtime)
+        teachersRef.on('value', (snapshot) => {
+            tTable.innerHTML = '';
             if (snapshot.exists()) {
-                snapshot.forEach((childSnapshot) => {
-                    const teacherId = childSnapshot.key;
-                    const teacherData = childSnapshot.val();
+                snapshot.forEach((child) => {
+                    const tId = child.key;
+                    const tData = child.val();
+                    
+                    // Badge status
+                    const statusBadge = tData.isActive 
+                        ? `<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Aktif</span>` 
+                        : `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">Non-Aktif</span>`;
+                    
+                    // Tombol Toggle
+                    const toggleBtnText = tData.isActive ? "Non-Aktifkan" : "Aktifkan";
+                    const toggleBtnColor = tData.isActive ? "text-orange-500" : "text-green-500";
 
-                    // Buat baris tabel HTML
-                    const row = `
-                        <tr>
-                            <td class="px-6 py-4 font-mono text-xs text-gray-400">${teacherId}</td>
-                            <td class="px-6 py-4 font-medium text-gray-900">${teacherData.name}</td>
-                            <td class="px-6 py-4 font-mono font-bold text-indigo-600">${teacherData.pin}</td>
-                            <td class="px-6 py-4">
-                                <button onclick="hapusGuru('${teacherId}')" class="text-red-600 hover:text-red-900 font-semibold text-xs">Hapus</button>
+                    tTable.innerHTML += `
+                        <tr class="border-b">
+                            <td class="p-3 font-semibold">${tData.name}</td>
+                            <td class="p-3 font-mono text-indigo-600 font-bold">${tData.pin}</td>
+                            <td class="p-3">${statusBadge}</td>
+                            <td class="p-3 text-right space-x-3">
+                                <button onclick="toggleGuru('${tId}', ${tData.isActive})" class="${toggleBtnColor} text-xs font-bold hover:underline">${toggleBtnText}</button>
+                                <button onclick="hapusGuru('${tId}')" class="text-red-600 text-xs font-bold hover:underline">Hapus</button>
                             </td>
                         </tr>
                     `;
-                    tableBody.innerHTML += row;
                 });
-            } else {
-                tableBody.innerHTML = `<tr><td colspan="4" class="px-6 py-4 text-center text-gray-400">Belum ada data guru.</td></tr>`;
             }
         });
 
-        // 3. FUNGSI HAPUS GURU
-        function hapusGuru(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus guru ini?')) {
-                db.ref('users/teachers/' + id).remove()
-                .then(() => {
-                    alert('Data guru berhasil dihapus.');
-                }).catch((error) => {
-                    alert('Gagal menghapus: ' + error.message);
-                });
-            }
+        // C. Hapus Guru
+        window.hapusGuru = function(id) {
+            if(confirm('Hapus guru ini?')) { teachersRef.child(id).remove(); }
+        }
+
+        // D. Toggle Aktif/Non-Aktif Guru
+        window.toggleGuru = function(id, currentStatus) {
+            teachersRef.child(id).update({ isActive: !currentStatus });
         }
     </script>
 </body>
-  </html>
+</html>
