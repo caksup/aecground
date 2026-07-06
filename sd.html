@@ -2,160 +2,218 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Siswa - Gabung Kuis</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Siswa - Kuis Pro</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { wa_teal: '#075e54', quiz_blue: '#2563eb' } } }
+        }
+    </script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-    
     <script src="firebase-config.js"></script>
-
+    
     <style>
-        /* v1.0: Kelas utilitas untuk menyembunyikan elemen UI */
-        .hidden-section {
-            display: none !important;
-        }
+        ::-webkit-scrollbar { display: none; }
+        .game-section { display: none; animation: slideUp 0.3s ease-out; }
+        .section-active { display: flex; flex-direction: column; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Animasi background untuk lobby */
+        .bg-animated { background: linear-gradient(-45deg, #2563eb, #4f46e5, #0ea5e9); background-size: 400% 400%; animation: gradientBG 5s ease infinite; }
+        .dark .bg-animated { background: linear-gradient(-45deg, #1e3a8a, #312e81, #0f172a); background-size: 400% 400%; animation: gradientBG 5s ease infinite; }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
     </style>
 </head>
-<body class="bg-blue-50 font-sans min-h-screen flex items-center justify-center p-4">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 h-screen flex flex-col overflow-hidden transition-colors duration-300">
 
-    <div id="joinSection" class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md border-t-4 border-blue-500">
-        <h2 class="text-2xl font-black text-center text-gray-800 mb-2">Gabung Kuis</h2>
-        <p class="text-center text-gray-500 mb-6 text-sm">Masukkan PIN dari layar Guru Anda</p>
-        
-        <form id="joinForm" class="space-y-4">
-            <div>
-                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">PIN Kuis (5 Digit)</label>
-                <input type="text" id="quizPin" maxlength="5" pattern="\d{5}" required class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-center text-2xl tracking-widest font-mono bg-gray-50">
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nama Panggilan (Nickname)</label>
-                <input type="text" id="studentName" required class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Kelas</label>
-                <input type="text" id="studentClass" required placeholder="Contoh: 10-A" class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-            </div>
-            <button type="submit" id="btnJoin" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-200">
-                Masuk Game
-            </button>
-            <p id="joinError" class="text-red-500 text-sm text-center hidden-section font-medium mt-2"></p>
-        </form>
-    </div>
+    <header class="bg-white dark:bg-gray-800 text-gray-800 dark:text-white p-4 shadow-sm flex justify-between items-center z-20 shrink-0 border-b dark:border-gray-700">
+        <div class="font-black text-lg flex items-center gap-2 text-quiz_blue dark:text-blue-400">
+            <i class="fa-solid fa-gamepad"></i> <span id="headerTitle">Join Game</span>
+        </div>
+        <div class="flex space-x-6 text-xl items-center text-gray-500 dark:text-gray-400">
+            <button onclick="cycleTheme()" class="hover:text-yellow-500 transition"><i id="themeIcon" class="fa-solid fa-mobile-screen"></i></button>
+            <button onclick="toggleFullScreen()" class="hover:text-quiz_blue transition"><i id="fsIcon" class="fa-solid fa-expand"></i></button>
+        </div>
+    </header>
 
-    <div id="lobbySection" class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md text-center hidden-section border-t-4 border-yellow-400">
-        <div class="animate-pulse mb-4">
-            <svg class="mx-auto h-16 w-16 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-        </div>
-        <h2 class="text-2xl font-bold text-gray-800 mb-2">Anda Sudah Masuk!</h2>
-        <p class="text-gray-600 mb-6">Halo <span id="displayStudentName" class="font-bold text-blue-600"></span>, bersiaplah.<br>Menunggu guru memulai kuis...</p>
+    <main class="flex-1 overflow-y-auto relative bg-gray-50 dark:bg-gray-900">
         
-        <div class="bg-gray-100 p-4 rounded-md text-sm text-gray-500">
-            PIN Ruangan: <span id="displayPin" class="font-bold text-gray-800 tracking-widest"></span>
-        </div>
-    </div>
+        <section id="sec-join" class="game-section section-active h-full items-center justify-center p-4">
+            <div class="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl w-full max-w-sm border-t-8 border-quiz_blue">
+                <div class="text-center mb-6">
+                    <h2 class="text-3xl font-black text-gray-800 dark:text-white tracking-tight">Siap Bermain?</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Masukkan data Anda di bawah ini</p>
+                </div>
+                
+                <form id="joinForm" class="space-y-5">
+                    <div class="relative">
+                        <i class="fa-solid fa-hashtag absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="pinInput" maxlength="5" pattern="\d{5}" required placeholder="PIN Kuis (5 Digit)" class="w-full pl-10 pr-4 py-3 bg-gray-100 dark:bg-gray-700 border-none rounded-xl focus:ring-2 focus:ring-quiz_blue text-lg font-bold tracking-widest text-center dark:text-white">
+                    </div>
+                    <div class="relative">
+                        <i class="fa-solid fa-user-astronaut absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="nameInput" required placeholder="Nama / Nickname" class="w-full pl-10 pr-4 py-3 bg-gray-100 dark:bg-gray-700 border-none rounded-xl focus:ring-2 focus:ring-quiz_blue font-medium dark:text-white">
+                    </div>
+                    <div class="relative">
+                        <i class="fa-solid fa-school absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="classInput" required placeholder="Kelas (Contoh: 10-A)" class="w-full pl-10 pr-4 py-3 bg-gray-100 dark:bg-gray-700 border-none rounded-xl focus:ring-2 focus:ring-quiz_blue font-medium dark:text-white">
+                    </div>
+                    
+                    <button type="submit" id="btnJoin" class="w-full bg-quiz_blue hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-lg transition-transform active:scale-95 text-lg mt-2">
+                        Masuk Sekarang <i class="fa-solid fa-rocket ml-2"></i>
+                    </button>
+                    <p id="joinError" class="text-red-500 text-sm font-bold text-center hidden"></p>
+                </form>
+            </div>
+        </section>
+
+        <section id="sec-lobby" class="game-section h-full items-center justify-center p-4 bg-animated text-white">
+            <div class="text-center w-full max-w-sm">
+                <i class="fa-solid fa-spinner fa-spin-pulse text-6xl mb-6 opacity-80"></i>
+                <h2 class="text-4xl font-black mb-2 drop-shadow-md">Anda di Dalam!</h2>
+                <p class="text-lg opacity-90 font-medium mb-8">Halo <span id="displayName" class="text-yellow-300 font-black"></span>, perhatikan layar Guru.</p>
+                
+                <div class="bg-black/20 backdrop-blur-sm p-4 rounded-2xl border border-white/20">
+                    <p class="text-xs uppercase tracking-widest opacity-70 mb-1 font-bold">PIN Ruangan</p>
+                    <p id="displayPin" class="text-3xl font-black tracking-[0.2em] text-yellow-300"></p>
+                </div>
+                
+                <p class="mt-8 text-sm opacity-75 animate-pulse"><i class="fa-solid fa-clock mr-2"></i>Menunggu host memulai permainan...</p>
+            </div>
+        </section>
+
+    </main>
 
     <script>
-        // v1.0: Deklarasi Variabel DOM
-        const joinSection = document.getElementById('joinSection');
-        const lobbySection = document.getElementById('lobbySection');
+        // --- 1. FULLSCREEN OTOMATIS & MANUAL ---
+        let isFirstInteraction = true;
+        document.body.addEventListener('click', () => {
+            if (isFirstInteraction) {
+                if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen().catch(e => console.log("Fullscreen butuh interaksi."));
+                }
+                isFirstInteraction = false;
+            }
+        });
+
+        function toggleFullScreen() {
+            const fsIcon = document.getElementById('fsIcon');
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+                fsIcon.classList.replace('fa-expand', 'fa-compress');
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                    fsIcon.classList.replace('fa-compress', 'fa-expand');
+                }
+            }
+        }
+
+        // --- 2. SIKLUS TEMA ---
+        const themeStates = ['system', 'light', 'dark'];
+        const themeIcons = ['fa-mobile-screen', 'fa-sun', 'fa-moon'];
+        let currentThemeIndex = parseInt(localStorage.getItem('themeIndex')) || 0;
+
+        function applyTheme(index) {
+            const theme = themeStates[index];
+            document.getElementById('themeIcon').className = `fa-solid ${themeIcons[index]}`;
+            const htmlClass = document.documentElement.classList;
+            if (theme === 'dark') htmlClass.add('dark');
+            else if (theme === 'light') htmlClass.remove('dark');
+            else { window.matchMedia('(prefers-color-scheme: dark)').matches ? htmlClass.add('dark') : htmlClass.remove('dark'); }
+            localStorage.setItem('themeIndex', index);
+        }
+        function cycleTheme() { currentThemeIndex = (currentThemeIndex + 1) % themeStates.length; applyTheme(currentThemeIndex); }
+        applyTheme(currentThemeIndex);
+
+        // --- 3. TRANSISI SECTION (Linear Flow) ---
+        function changeSection(sectionId, headerText) {
+            document.querySelectorAll('.game-section').forEach(el => { el.classList.remove('section-active'); });
+            document.getElementById(sectionId).classList.add('section-active');
+            document.getElementById('headerTitle').innerText = headerText;
+        }
+
+        // --- 4. FIREBASE LOGIC: GABUNG KUIS ---
         const joinForm = document.getElementById('joinForm');
         const joinError = document.getElementById('joinError');
         const btnJoin = document.getElementById('btnJoin');
         
-        // v1.0: State Management Siswa
         let currentRoomPin = null;
         let studentSessionId = null;
 
-        // v1.0: Fungsi Submit Form Gabung Kuis
         joinForm.addEventListener('submit', (e) => {
             e.preventDefault();
             
-            // Mengambil nilai input
-            const pin = document.getElementById('quizPin').value;
-            const name = document.getElementById('studentName').value;
-            const studentClass = document.getElementById('studentClass').value;
+            const pin = document.getElementById('pinInput').value;
+            const name = document.getElementById('nameInput').value;
+            const studentClass = document.getElementById('classInput').value;
             
-            btnJoin.innerText = "Mengecek...";
+            btnJoin.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Menghubungkan...';
             btnJoin.disabled = true;
 
-            // v1.0: Mengecek apakah Ruangan dengan PIN tersebut ada di Firebase
             const roomRef = db.ref('rooms/' + pin);
-            roomRef.once('value')
-                .then((snapshot) => {
-                    if (snapshot.exists()) {
-                        const roomData = snapshot.val();
-                        
-                        // Cek apakah kuis masih di lobby (waiting)
-                        if (roomData.status === 'waiting') {
-                            bergabungKeLobby(pin, name, studentClass);
-                        } else {
-                            tampilkanError("Kuis sudah dimulai atau selesai. Anda tidak bisa bergabung.");
-                        }
+            roomRef.once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    const roomData = snapshot.val();
+                    if (roomData.status === 'waiting') {
+                        bergabungKeLobby(pin, name, studentClass);
                     } else {
-                        tampilkanError("PIN Ruangan tidak ditemukan!");
+                        tampilkanError("Kuis sudah dimulai atau selesai.");
                     }
-                })
-                .catch((error) => {
-                    console.error("Error:", error);
-                    tampilkanError("Terjadi kesalahan jaringan.");
-                });
+                } else {
+                    tampilkanError("PIN tidak ditemukan!");
+                }
+            }).catch((error) => {
+                tampilkanError("Terjadi kesalahan jaringan.");
+            });
         });
 
-        // v1.0: Fungsi memasukkan data siswa ke dalam ruangan di Firebase
         function bergabungKeLobby(pin, name, studentClass) {
-            // Membuat ID unik untuk sesi siswa ini (menggunakan timestamp + random)
             studentSessionId = 'student_' + Date.now();
             currentRoomPin = pin;
 
             const playerRef = db.ref(`rooms/${pin}/players/${studentSessionId}`);
             
-            // Set data awal pemain
             playerRef.set({
                 nickname: name,
                 kelas: studentClass,
                 score: 0,
                 lastAnswerTime: 0
             }).then(() => {
-                // Berhasil masuk, ubah tampilan ke Lobby
-                joinSection.classList.add('hidden-section');
-                lobbySection.classList.remove('hidden-section');
-                
-                document.getElementById('displayStudentName').innerText = name;
+                // UI Transisi ke Lobby
+                changeSection('sec-lobby', 'Lobby Kuis');
+                document.getElementById('displayName').innerText = name;
                 document.getElementById('displayPin').innerText = pin;
                 
-                // Mulai mendengarkan perintah dari Guru (Realtime Listener)
                 pantauStatusRuangan();
-            }).catch((error) => {
+            }).catch(() => {
                 tampilkanError("Gagal masuk ke ruangan.");
             });
         }
 
-        // v1.0: Fungsi Realtime untuk memantau perubahan status game dari Guru
         function pantauStatusRuangan() {
             const statusRef = db.ref(`rooms/${currentRoomPin}/status`);
-            
             statusRef.on('value', (snapshot) => {
                 const statusGame = snapshot.val();
-                
                 if (statusGame === 'playing') {
-                    // v2.0 nanti: Logika pindah ke layar soal akan ditaruh di sini
-                    alert("KUIS DIMULAI! (Transisi ke soal akan ditambahkan di tahap selanjutnya)");
+                    alert("Mockup: Layar akan berpindah ke Soal!");
                 } else if (statusGame === 'finished') {
-                    alert("Kuis telah selesai!");
+                    alert("Mockup: Layar akan berpindah ke Leaderboard!");
                 }
             });
         }
 
-        // v1.0: Fungsi utilitas menampilkan error UI
-        function tampilkanError(pesan) {
-            joinError.innerText = pesan;
-            joinError.classList.remove('hidden-section');
-            btnJoin.innerText = "Masuk Game";
+        function tampilkanError(msg) {
+            joinError.innerText = msg;
+            joinError.classList.remove('hidden');
+            btnJoin.innerHTML = 'Masuk Sekarang <i class="fa-solid fa-rocket ml-2"></i>';
             btnJoin.disabled = false;
         }
     </script>
