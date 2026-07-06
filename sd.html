@@ -1,1 +1,163 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Siswa - Gabung Kuis</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    
+    <script src="firebase-config.js"></script>
 
+    <style>
+        /* v1.0: Kelas utilitas untuk menyembunyikan elemen UI */
+        .hidden-section {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="bg-blue-50 font-sans min-h-screen flex items-center justify-center p-4">
+
+    <div id="joinSection" class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md border-t-4 border-blue-500">
+        <h2 class="text-2xl font-black text-center text-gray-800 mb-2">Gabung Kuis</h2>
+        <p class="text-center text-gray-500 mb-6 text-sm">Masukkan PIN dari layar Guru Anda</p>
+        
+        <form id="joinForm" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">PIN Kuis (5 Digit)</label>
+                <input type="text" id="quizPin" maxlength="5" pattern="\d{5}" required class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-center text-2xl tracking-widest font-mono bg-gray-50">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nama Panggilan (Nickname)</label>
+                <input type="text" id="studentName" required class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Kelas</label>
+                <input type="text" id="studentClass" required placeholder="Contoh: 10-A" class="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <button type="submit" id="btnJoin" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-md transition duration-200">
+                Masuk Game
+            </button>
+            <p id="joinError" class="text-red-500 text-sm text-center hidden-section font-medium mt-2"></p>
+        </form>
+    </div>
+
+    <div id="lobbySection" class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md text-center hidden-section border-t-4 border-yellow-400">
+        <div class="animate-pulse mb-4">
+            <svg class="mx-auto h-16 w-16 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Anda Sudah Masuk!</h2>
+        <p class="text-gray-600 mb-6">Halo <span id="displayStudentName" class="font-bold text-blue-600"></span>, bersiaplah.<br>Menunggu guru memulai kuis...</p>
+        
+        <div class="bg-gray-100 p-4 rounded-md text-sm text-gray-500">
+            PIN Ruangan: <span id="displayPin" class="font-bold text-gray-800 tracking-widest"></span>
+        </div>
+    </div>
+
+    <script>
+        // v1.0: Deklarasi Variabel DOM
+        const joinSection = document.getElementById('joinSection');
+        const lobbySection = document.getElementById('lobbySection');
+        const joinForm = document.getElementById('joinForm');
+        const joinError = document.getElementById('joinError');
+        const btnJoin = document.getElementById('btnJoin');
+        
+        // v1.0: State Management Siswa
+        let currentRoomPin = null;
+        let studentSessionId = null;
+
+        // v1.0: Fungsi Submit Form Gabung Kuis
+        joinForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // Mengambil nilai input
+            const pin = document.getElementById('quizPin').value;
+            const name = document.getElementById('studentName').value;
+            const studentClass = document.getElementById('studentClass').value;
+            
+            btnJoin.innerText = "Mengecek...";
+            btnJoin.disabled = true;
+
+            // v1.0: Mengecek apakah Ruangan dengan PIN tersebut ada di Firebase
+            const roomRef = db.ref('rooms/' + pin);
+            roomRef.once('value')
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const roomData = snapshot.val();
+                        
+                        // Cek apakah kuis masih di lobby (waiting)
+                        if (roomData.status === 'waiting') {
+                            bergabungKeLobby(pin, name, studentClass);
+                        } else {
+                            tampilkanError("Kuis sudah dimulai atau selesai. Anda tidak bisa bergabung.");
+                        }
+                    } else {
+                        tampilkanError("PIN Ruangan tidak ditemukan!");
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    tampilkanError("Terjadi kesalahan jaringan.");
+                });
+        });
+
+        // v1.0: Fungsi memasukkan data siswa ke dalam ruangan di Firebase
+        function bergabungKeLobby(pin, name, studentClass) {
+            // Membuat ID unik untuk sesi siswa ini (menggunakan timestamp + random)
+            studentSessionId = 'student_' + Date.now();
+            currentRoomPin = pin;
+
+            const playerRef = db.ref(`rooms/${pin}/players/${studentSessionId}`);
+            
+            // Set data awal pemain
+            playerRef.set({
+                nickname: name,
+                kelas: studentClass,
+                score: 0,
+                lastAnswerTime: 0
+            }).then(() => {
+                // Berhasil masuk, ubah tampilan ke Lobby
+                joinSection.classList.add('hidden-section');
+                lobbySection.classList.remove('hidden-section');
+                
+                document.getElementById('displayStudentName').innerText = name;
+                document.getElementById('displayPin').innerText = pin;
+                
+                // Mulai mendengarkan perintah dari Guru (Realtime Listener)
+                pantauStatusRuangan();
+            }).catch((error) => {
+                tampilkanError("Gagal masuk ke ruangan.");
+            });
+        }
+
+        // v1.0: Fungsi Realtime untuk memantau perubahan status game dari Guru
+        function pantauStatusRuangan() {
+            const statusRef = db.ref(`rooms/${currentRoomPin}/status`);
+            
+            statusRef.on('value', (snapshot) => {
+                const statusGame = snapshot.val();
+                
+                if (statusGame === 'playing') {
+                    // v2.0 nanti: Logika pindah ke layar soal akan ditaruh di sini
+                    alert("KUIS DIMULAI! (Transisi ke soal akan ditambahkan di tahap selanjutnya)");
+                } else if (statusGame === 'finished') {
+                    alert("Kuis telah selesai!");
+                }
+            });
+        }
+
+        // v1.0: Fungsi utilitas menampilkan error UI
+        function tampilkanError(pesan) {
+            joinError.innerText = pesan;
+            joinError.classList.remove('hidden-section');
+            btnJoin.innerText = "Masuk Game";
+            btnJoin.disabled = false;
+        }
+    </script>
+</body>
+</html>
