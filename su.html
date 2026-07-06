@@ -1,132 +1,142 @@
 <!DOCTYPE html>
-<html lang="id">
-<head>
+<html lang="id" class="light"> <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Superuser - Admin Kuis Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SU Panel - Kuis Pro</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: { wa_teal: '#075e54', wa_light: '#dcf8c6' }
+                }
+            }
+        }
+    </script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     <script src="firebase-config.js"></script>
+    
     <style>
-        .tab-content { display: none; }
+        /* Sembunyikan scrollbar untuk tampilan seperti aplikasi native */
+        ::-webkit-scrollbar { display: none; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
         .tab-active { display: block; }
-        .nav-active { background-color: #4f46e5; color: white; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Overlay Fullscreen */
+        #tapToStart { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; cursor: pointer; }
     </style>
 </head>
-<body class="bg-gray-100 flex h-screen overflow-hidden font-sans">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 h-screen flex flex-col overflow-hidden transition-colors duration-300">
 
-    <aside class="w-64 bg-white shadow-xl flex flex-col">
-        <div class="p-6 border-b border-gray-200">
-            <h1 class="text-2xl font-black text-indigo-700">SU Panel</h1>
-            <p class="text-xs text-gray-500 mt-1">Sistem Quiz Multiplayer</p>
+    <div id="tapToStart" onclick="initApp()">
+        <i class="fa-solid fa-hand-pointer fa-bounce text-5xl mb-4 text-white"></i>
+        <h2 class="text-xl font-bold">Ketuk Layar untuk Memulai</h2>
+        <p class="text-sm text-gray-300 mt-2">Masuk ke Mode Layar Penuh</p>
+    </div>
+
+    <header class="bg-wa_teal dark:bg-gray-800 text-white p-4 shadow-md flex justify-between items-center z-10 shrink-0">
+        <div class="font-bold text-lg flex items-center gap-2">
+            <i class="fa-solid fa-user-shield fa-fade"></i> SU Panel
         </div>
-        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-            <button onclick="switchTab('menu-guru', this)" class="nav-btn nav-active w-full text-left px-4 py-3 rounded-lg text-sm font-semibold text-gray-700 hover:bg-indigo-50 transition">1. Manajemen Guru</button>
-            <button onclick="switchTab('menu-soal', this)" class="nav-btn w-full text-left px-4 py-3 rounded-lg text-sm font-semibold text-gray-700 hover:bg-indigo-50 transition">2. Manajemen Soal</button>
-            <button onclick="switchTab('menu-setting', this)" class="nav-btn w-full text-left px-4 py-3 rounded-lg text-sm font-semibold text-gray-700 hover:bg-indigo-50 transition">3. Sistem Setting</button>
-            <button onclick="switchTab('menu-riwayat', this)" class="nav-btn w-full text-left px-4 py-3 rounded-lg text-sm font-semibold text-gray-700 hover:bg-indigo-50 transition">4. Riwayat & Laporan</button>
-            <button onclick="switchTab('menu-versi', this)" class="nav-btn w-full text-left px-4 py-3 rounded-lg text-sm font-semibold text-gray-700 hover:bg-indigo-50 transition">5. Versi Aplikasi</button>
-        </nav>
-    </aside>
-
-    <main class="flex-1 p-8 overflow-y-auto">
         
-        <div id="menu-guru" class="tab-content tab-active">
-            <h2 class="text-2xl font-bold mb-6 text-gray-800">Manajemen Guru</h2>
-            
-            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-                <h3 class="text-lg font-semibold mb-4 border-b pb-2">Tambah / Input Guru Baru</h3>
-                <form id="teacherForm" class="flex gap-4 items-end">
+        <div class="flex space-x-5 text-lg">
+            <button onclick="setTheme('light')" class="hover:text-yellow-300 transition" title="Terang"><i class="fa-solid fa-sun"></i></button>
+            <button onclick="setTheme('dark')" class="hover:text-blue-300 transition" title="Gelap"><i class="fa-solid fa-moon"></i></button>
+            <button onclick="setTheme('system')" class="hover:text-gray-300 transition" title="Ikuti Sistem"><i class="fa-solid fa-mobile-screen"></i></button>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto p-4 pb-20 relative space-y-4">
+        
+        <div id="tab-guru" class="tab-content tab-active">
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm mb-4 border-l-4 border-wa_teal">
+                <form id="teacherForm" class="flex items-center gap-2">
                     <div class="flex-1">
-                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Nama Guru</label>
-                        <input type="text" id="tName" required class="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-400">
+                        <input type="text" id="tName" placeholder="Nama..." required class="w-full bg-gray-50 dark:bg-gray-700 text-sm p-2 rounded border border-gray-200 dark:border-gray-600 focus:outline-none focus:ring-1 focus:ring-wa_teal">
                     </div>
-                    <div class="w-32">
-                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">PIN (4 Digit)</label>
-                        <input type="text" id="tPin" maxlength="4" pattern="\d{4}" required class="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-400">
+                    <div class="w-20">
+                        <input type="text" id="tPin" maxlength="4" pattern="\d{4}" placeholder="PIN" required class="w-full bg-gray-50 dark:bg-gray-700 text-sm p-2 rounded border border-gray-200 dark:border-gray-600 text-center focus:outline-none focus:ring-1 focus:ring-wa_teal">
                     </div>
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded">Simpan</button>
+                    <button type="submit" class="bg-wa_teal hover:bg-green-700 text-white p-2 rounded-full w-10 h-10 flex items-center justify-center shrink-0 shadow-md">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </button>
                 </form>
             </div>
 
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h3 class="text-lg font-semibold mb-4 border-b pb-2">Daftar Guru Terdaftar</h3>
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-gray-100 text-gray-600 text-sm">
-                            <th class="p-3">Nama Guru</th>
-                            <th class="p-3">PIN Login</th>
-                            <th class="p-3">Status</th>
-                            <th class="p-3 text-right">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="teacherTableBody" class="text-sm divide-y">
-                        </tbody>
-                </table>
+            <div id="teacherList" class="space-y-3">
+                </div>
+        </div>
+
+        <div id="tab-soal" class="tab-content">
+            <div class="grid grid-cols-2 gap-4">
+                <button class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm flex flex-col items-center gap-3 text-wa_teal dark:text-green-400">
+                    <i class="fa-solid fa-file-circle-plus text-4xl fa-beat-fade" style="--fa-beat-fade-opacity: 0.6; --fa-beat-fade-scale: 1.1;"></i>
+                    <span class="text-sm font-bold text-gray-700 dark:text-gray-200">Buat Soal</span>
+                </button>
+                <button class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm flex flex-col items-center gap-3 text-blue-500">
+                    <i class="fa-solid fa-book-open text-4xl"></i>
+                    <span class="text-sm font-bold text-gray-700 dark:text-gray-200">Bank Soal</span>
+                </button>
             </div>
         </div>
 
-        <div id="menu-soal" class="tab-content">
-            <h2 class="text-2xl font-bold mb-6 text-gray-800">Manajemen Soal</h2>
-            <div class="bg-white p-6 rounded-lg shadow border-l-4 border-indigo-500 mb-4">
-                <h3 class="font-bold">A. Buat Soal Baru</h3>
-                <p class="text-sm text-gray-500">Fitur form pembuat soal (Bisa set waktu per soal). Akan kita kembangkan di tahap selanjutnya.</p>
-            </div>
-            <div class="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
-                <h3 class="font-bold">B. Riwayat Bank Soal</h3>
-                <p class="text-sm text-gray-500">Daftar soal yang sudah dibuat, bisa di-klik untuk dijadikan kuis baru.</p>
+        <div id="tab-setting" class="tab-content">
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm space-y-4">
+                <div class="flex items-center gap-3 border-b dark:border-gray-700 pb-3">
+                    <i class="fa-solid fa-bullhorn text-orange-500 text-xl text-center w-8"></i>
+                    <input type="text" placeholder="Pengumuman Header..." class="flex-1 bg-transparent text-sm focus:outline-none dark:text-white">
+                </div>
+                <div class="flex items-start gap-3 border-b dark:border-gray-700 pb-3">
+                    <i class="fa-solid fa-message text-blue-500 text-xl text-center w-8 mt-1"></i>
+                    <textarea placeholder="Info Halaman Login..." rows="2" class="flex-1 bg-transparent text-sm focus:outline-none dark:text-white resize-none"></textarea>
+                </div>
+                <div class="text-right">
+                    <button class="bg-wa_teal text-white px-4 py-2 rounded-full text-sm font-bold shadow-md"><i class="fa-solid fa-save mr-2"></i>Simpan</button>
+                </div>
             </div>
         </div>
 
-        <div id="menu-setting" class="tab-content">
-            <h2 class="text-2xl font-bold mb-6 text-gray-800">Sistem Setting</h2>
-            <div class="bg-white p-6 rounded-lg shadow space-y-6">
-                <div>
-                    <label class="block font-bold mb-2">Info Halaman Login</label>
-                    <textarea class="w-full border rounded p-2 text-sm" rows="2" placeholder="Teks yang muncul di halaman login siswa/guru..."></textarea>
+        <div id="tab-riwayat" class="tab-content">
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm text-center">
+                    <i class="fa-solid fa-chalkboard-user text-3xl text-indigo-500 mb-2"></i>
+                    <div class="text-2xl font-black dark:text-white">0</div>
                 </div>
-                <div>
-                    <label class="block font-bold mb-2">Pengumuman di Header (Berjalan)</label>
-                    <input type="text" class="w-full border rounded p-2 text-sm" placeholder="Contoh: Kuis Semester Ganjil akan dimulai minggu depan...">
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm text-center">
+                    <i class="fa-solid fa-users text-3xl text-green-500 mb-2"></i>
+                    <div class="text-2xl font-black dark:text-white">0</div>
                 </div>
-                <button class="bg-indigo-600 text-white px-4 py-2 rounded text-sm font-bold">Simpan Pengaturan</button>
+            </div>
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-trophy text-yellow-500 text-2xl"></i>
+                    <span class="font-bold text-sm dark:text-white">Leaderboard Global</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-gray-400"></i>
             </div>
         </div>
 
-        <div id="menu-riwayat" class="tab-content">
-            <h2 class="text-2xl font-bold mb-6 text-gray-800">Riwayat & Statistik</h2>
-            <div class="grid grid-cols-3 gap-4 mb-6">
-                <div class="bg-blue-100 p-4 rounded-lg shadow text-center">
-                    <h4 class="text-sm font-bold text-blue-800">Total Guru Berpartisipasi</h4>
-                    <span class="text-3xl font-black text-blue-600">0</span>
-                </div>
-                <div class="bg-green-100 p-4 rounded-lg shadow text-center">
-                    <h4 class="text-sm font-bold text-green-800">Total Siswa Main</h4>
-                    <span class="text-3xl font-black text-green-600">0</span>
-                </div>
-            </div>
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h3 class="font-bold border-b pb-2 mb-4">Leaderboard Prestasi Global (Semua Sesi)</h3>
-                <p class="text-sm text-gray-500">Data belum tersedia.</p>
-            </div>
-        </div>
-
-        <div id="menu-versi" class="tab-content">
-            <h2 class="text-2xl font-bold mb-6 text-gray-800">Timeline Versi Aplikasi</h2>
-            <div class="bg-white p-8 rounded-lg shadow">
-                <div class="relative border-l-2 border-indigo-500 ml-3 space-y-8">
-                    <div class="relative pl-6">
-                        <div class="absolute -left-2 top-1.5 w-4 h-4 bg-indigo-600 rounded-full border-2 border-white shadow"></div>
-                        <h3 class="font-bold text-lg text-indigo-700">Versi 2.0 (Pro)</h3>
-                        <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">Dalam Pengembangan</span>
-                        <p class="text-sm text-gray-600 mt-2">Perombakan UI Superuser, penambahan supervisor guru, mode kuis ganda (moderasi/bebas), dan batasan waktu per soal.</p>
+        <div id="tab-versi" class="tab-content">
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
+                <div class="flex gap-4 items-start mb-6">
+                    <i class="fa-solid fa-rocket text-wa_teal text-xl mt-1"></i>
+                    <div>
+                        <h3 class="font-bold dark:text-white">Versi 2.1 <span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full ml-1">Beta</span></h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">UI Mobile, Fullscreen, Dark Mode.</p>
                     </div>
-                    <div class="relative pl-6">
-                        <div class="absolute -left-2 top-1.5 w-4 h-4 bg-gray-400 rounded-full border-2 border-white shadow"></div>
-                        <h3 class="font-bold text-lg text-gray-700">Versi 1.0</h3>
-                        <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">6 July 2026</span>
-                        <p class="text-sm text-gray-600 mt-2">Versi pengujian awal. Implementasi login Guru, generator PIN Kuis 5 digit, dan koneksi realtime ke Lobby Siswa.</p>
+                </div>
+                <div class="flex gap-4 items-start">
+                    <i class="fa-solid fa-check-circle text-gray-400 text-xl mt-1"></i>
+                    <div>
+                        <h3 class="font-bold text-gray-600 dark:text-gray-300">Versi 1.0</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Sistem dasar Realtime Database.</p>
                     </div>
                 </div>
             </div>
@@ -134,82 +144,137 @@
 
     </main>
 
+    <nav class="bg-white dark:bg-gray-800 border-t dark:border-gray-700 flex justify-between px-2 py-2 fixed bottom-0 w-full z-20 shrink-0">
+        <button onclick="switchTab('tab-guru', this)" class="nav-btn text-wa_teal flex flex-col items-center w-1/5 py-1">
+            <i class="fa-solid fa-user-tie text-xl mb-1"></i><span class="text-[10px] font-bold">Guru</span>
+        </button>
+        <button onclick="switchTab('tab-soal', this)" class="nav-btn text-gray-400 dark:text-gray-500 hover:text-wa_teal flex flex-col items-center w-1/5 py-1 transition-colors">
+            <i class="fa-solid fa-layer-group text-xl mb-1"></i><span class="text-[10px] font-bold">Soal</span>
+        </button>
+        <button onclick="switchTab('tab-setting', this)" class="nav-btn text-gray-400 dark:text-gray-500 hover:text-wa_teal flex flex-col items-center w-1/5 py-1 transition-colors">
+            <i class="fa-solid fa-gear text-xl mb-1"></i><span class="text-[10px] font-bold">Setting</span>
+        </button>
+        <button onclick="switchTab('tab-riwayat', this)" class="nav-btn text-gray-400 dark:text-gray-500 hover:text-wa_teal flex flex-col items-center w-1/5 py-1 transition-colors">
+            <i class="fa-solid fa-chart-pie text-xl mb-1"></i><span class="text-[10px] font-bold">Riwayat</span>
+        </button>
+        <button onclick="switchTab('tab-versi', this)" class="nav-btn text-gray-400 dark:text-gray-500 hover:text-wa_teal flex flex-col items-center w-1/5 py-1 transition-colors">
+            <i class="fa-solid fa-code-branch text-xl mb-1"></i><span class="text-[10px] font-bold">Versi</span>
+        </button>
+    </nav>
+
     <script>
-        // --- 1. LOGIKA TAB NAVIGASI ---
-        function switchTab(tabId, btnElement) {
-            // Sembunyikan semua konten tab
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('tab-active'));
-            // Hilangkan warna aktif dari semua tombol
-            document.querySelectorAll('.nav-btn').forEach(el => {
-                el.classList.remove('nav-active', 'bg-indigo-600', 'text-white');
-                el.classList.add('text-gray-700');
-            });
+        // --- 1. FULLSCREEN & INIT APP ---
+        function initApp() {
+            const overlay = document.getElementById('tapToStart');
+            overlay.style.display = 'none';
             
-            // Tampilkan tab yang dipilih
-            document.getElementById(tabId).classList.add('tab-active');
-            // Warnai tombol yang dipilih
-            btnElement.classList.remove('text-gray-700');
-            btnElement.classList.add('nav-active', 'bg-indigo-600', 'text-white');
+            // Request Fullscreen (Berlaku di HP/Browser yang mendukung)
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(err => console.log("Fullscreen ditolak: ", err));
+            } else if (document.documentElement.webkitRequestFullscreen) { /* Safari */
+                document.documentElement.webkitRequestFullscreen();
+            }
         }
 
-        // --- 2. LOGIKA FIREBASE MANAJEMEN GURU ---
+        // --- 2. SISTEM TEMA (Dark/Light/System) ---
+        function setTheme(theme) {
+            const htmlClass = document.documentElement.classList;
+            if (theme === 'dark') {
+                htmlClass.add('dark');
+                localStorage.setItem('theme', 'dark');
+            } else if (theme === 'light') {
+                htmlClass.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                // System default
+                localStorage.removeItem('theme');
+                if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    htmlClass.add('dark');
+                } else {
+                    htmlClass.remove('dark');
+                }
+            }
+        }
+        
+        // Cek tema saat awal muat
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+
+        // --- 3. BOTTOM NAV TAB SWITCHER ---
+        function switchTab(tabId, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('tab-active'));
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('text-wa_teal');
+                el.classList.add('text-gray-400', 'dark:text-gray-500');
+            });
+            
+            document.getElementById(tabId).classList.add('tab-active');
+            btnElement.classList.remove('text-gray-400', 'dark:text-gray-500');
+            btnElement.classList.add('text-wa_teal');
+        }
+
+        // --- 4. FIREBASE CRUD GURU (Versi Icon) ---
         const tForm = document.getElementById('teacherForm');
-        const tTable = document.getElementById('teacherTableBody');
+        const tList = document.getElementById('teacherList');
         const teachersRef = db.ref('users/teachers');
 
-        // A. Tambah Guru
+        // Tambah
         tForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const name = document.getElementById('tName').value;
             const pin = document.getElementById('tPin').value;
-
-            teachersRef.push({
-                name: name,
-                pin: pin,
-                isActive: true // v2.0: Default guru baru adalah aktif
-            }).then(() => {
-                tForm.reset();
-            });
+            teachersRef.push({ name: name, pin: pin, isActive: true }).then(() => tForm.reset());
         });
 
-        // B. Tampilkan Data (Realtime)
+        // Realtime Read (Style Card WA)
         teachersRef.on('value', (snapshot) => {
-            tTable.innerHTML = '';
+            tList.innerHTML = '';
             if (snapshot.exists()) {
                 snapshot.forEach((child) => {
                     const tId = child.key;
                     const tData = child.val();
                     
-                    // Badge status
-                    const statusBadge = tData.isActive 
-                        ? `<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Aktif</span>` 
-                        : `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">Non-Aktif</span>`;
+                    // Icon Status Aktif/Non-aktif
+                    const statusIcon = tData.isActive 
+                        ? `<i class="fa-solid fa-toggle-on text-3xl text-green-500 drop-shadow-sm cursor-pointer" onclick="toggleGuru('${tId}', true)" title="Aktif"></i>` 
+                        : `<i class="fa-solid fa-toggle-off text-3xl text-gray-400 dark:text-gray-600 cursor-pointer" onclick="toggleGuru('${tId}', false)" title="Non-Aktif"></i>`;
                     
-                    // Tombol Toggle
-                    const toggleBtnText = tData.isActive ? "Non-Aktifkan" : "Aktifkan";
-                    const toggleBtnColor = tData.isActive ? "text-orange-500" : "text-green-500";
-
-                    tTable.innerHTML += `
-                        <tr class="border-b">
-                            <td class="p-3 font-semibold">${tData.name}</td>
-                            <td class="p-3 font-mono text-indigo-600 font-bold">${tData.pin}</td>
-                            <td class="p-3">${statusBadge}</td>
-                            <td class="p-3 text-right space-x-3">
-                                <button onclick="toggleGuru('${tId}', ${tData.isActive})" class="${toggleBtnColor} text-xs font-bold hover:underline">${toggleBtnText}</button>
-                                <button onclick="hapusGuru('${tId}')" class="text-red-600 text-xs font-bold hover:underline">Hapus</button>
-                            </td>
-                        </tr>
+                    // Tampilan Card Guru
+                    tList.innerHTML += `
+                        <div class="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm flex items-center justify-between border-l-4 ${tData.isActive ? 'border-green-500' : 'border-gray-400'}">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-500">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-sm dark:text-white leading-tight">${tData.name}</h4>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        <i class="fa-solid fa-key mr-1"></i><span class="font-mono font-bold tracking-widest text-wa_teal">${tData.pin}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-4">
+                                ${statusIcon}
+                                <button onclick="hapusGuru('${tId}')" class="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/30 transition">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
                     `;
                 });
+            } else {
+                tList.innerHTML = `<div class="text-center text-gray-400 text-sm mt-8"><i class="fa-solid fa-box-open text-3xl mb-2 block"></i>Belum ada data guru</div>`;
             }
         });
 
-        // C. Hapus Guru
+        // Hapus
         window.hapusGuru = function(id) {
-            if(confirm('Hapus guru ini?')) { teachersRef.child(id).remove(); }
+            if(confirm('Hapus akun guru ini?')) { teachersRef.child(id).remove(); }
         }
 
-        // D. Toggle Aktif/Non-Aktif Guru
+        // Toggle Status
         window.toggleGuru = function(id, currentStatus) {
             teachersRef.child(id).update({ isActive: !currentStatus });
         }
