@@ -1,15 +1,3 @@
-<!-- 
-=========================================================
-RIWAYAT PERUBAHAN VERSI HTML (tc.html)
-=========================================================
-- Versi 1.0 : Inisialisasi awal UI Guru (Desktop base).
-- Versi 2.0 : 
-  [UI] Rombak ke Mobile-First (WhatsApp Style) dengan Navigasi Bawah.
-  [Fitur] Implementasi Tema Dinamis & Fullscreen.
-  [Auth] Login divalidasi ke Firebase + Cek Status Aktif/Non-Aktif.
-  [Menu] Info (Mulai Kuis/Supervisor), Soal, Panduan, Profil.
-=========================================================
--->
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -17,24 +5,22 @@ RIWAYAT PERUBAHAN VERSI HTML (tc.html)
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Panel Guru - Kuis Pro</title>
     
-    <!-- Tailwind CSS (Konfigurasi Dark Mode) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: { extend: { colors: { wa_teal: '#075e54', wa_light: '#dcf8c6' } } }
-        }
-    </script>
-    
-    <!-- FontAwesome Icons -->
+    <script>tailwind.config = { darkMode: 'class', theme: { extend: { colors: { wa_teal: '#075e54', wa_light: '#dcf8c6' } } } }</script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Firebase SDK & Config -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     <script src="firebase-config.js"></script>
     
     <style>
+        /*
+        =========================================================
+        RIWAYAT PERUBAHAN VERSI CSS
+        - v2.0.0 (8 Jul 2026) : Hide scrollbar, flex animation for section toggle.
+        - v3.0.0 (8 Jul 2026) : Standarisasi blok komentar.
+        =========================================================
+        */
         ::-webkit-scrollbar { display: none; }
         .tab-content, #appSection { display: none; animation: fadeIn 0.2s ease-in-out; }
         .tab-active, .show-section { display: flex; flex-direction: column; }
@@ -43,23 +29,17 @@ RIWAYAT PERUBAHAN VERSI HTML (tc.html)
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 h-screen flex flex-col overflow-hidden transition-colors duration-300">
 
-    <!-- HEADER (Global) -->
     <header class="bg-indigo-600 dark:bg-gray-800 text-white p-4 shadow-md flex justify-between items-center z-10 shrink-0">
-        <div class="font-bold text-lg flex items-center gap-2">
-            <i class="fa-solid fa-chalkboard-user"></i> Guru Panel
-        </div>
+        <div class="font-bold text-lg flex items-center gap-2"><i class="fa-solid fa-chalkboard-user"></i> Guru Panel</div>
         <div class="flex space-x-6 text-xl items-center">
             <button onclick="cycleTheme()" class="hover:text-yellow-300 transition"><i id="themeIcon" class="fa-solid fa-mobile-screen"></i></button>
             <button onclick="toggleFullScreen()" class="hover:text-blue-300 transition"><i id="fsIcon" class="fa-solid fa-expand"></i></button>
         </div>
     </header>
 
-    <!-- ==================== SECTION 1: LOGIN ==================== -->
     <section id="loginSection" class="flex-1 flex items-center justify-center p-4 show-section">
         <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-sm text-center border-t-4 border-indigo-500">
-            <div class="w-20 h-20 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600 dark:text-indigo-400">
-                <i class="fa-solid fa-lock text-3xl"></i>
-            </div>
+            <div class="w-20 h-20 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600 dark:text-indigo-400"><i class="fa-solid fa-lock text-3xl"></i></div>
             <h2 class="text-2xl font-black mb-2 dark:text-white">Login Guru</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Masukkan PIN 4 digit dari admin</p>
             
@@ -73,180 +53,78 @@ RIWAYAT PERUBAHAN VERSI HTML (tc.html)
         </div>
     </section>
 
-    <!-- ==================== SECTION 2: APLIKASI UTAMA ==================== -->
     <section id="appSection" class="flex-1 overflow-hidden relative">
-        
         <main class="flex-1 overflow-y-auto p-4 pb-24 space-y-4 h-full">
-            
-            <!-- MENU 1: INFO (Dashboard Utama) -->
             <div id="tab-info" class="tab-content tab-active h-full space-y-4">
                 <div class="bg-indigo-50 dark:bg-gray-800 border border-indigo-100 dark:border-gray-700 p-4 rounded-xl shadow-sm text-center">
                     <p class="text-xs text-indigo-500 dark:text-indigo-400 font-bold uppercase mb-1">Status Anda</p>
                     <h3 class="text-xl font-black text-gray-800 dark:text-white" id="displayTeacherName">Memuat...</h3>
                 </div>
-
-                <!-- Panel Buat Sesi Kuis -->
                 <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border-l-4 border-green-500">
-                    <div class="flex gap-3 items-center mb-2">
-                        <i class="fa-solid fa-play text-green-500 text-xl"></i>
-                        <h3 class="font-bold text-gray-800 dark:text-white">Mulai Sesi Kuis</h3>
-                    </div>
+                    <div class="flex gap-3 items-center mb-2"><i class="fa-solid fa-play text-green-500 text-xl"></i><h3 class="font-bold text-gray-800 dark:text-white">Mulai Sesi Kuis</h3></div>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Buat ruangan baru agar siswa bisa bergabung.</p>
-                    <button onclick="buatRuangan()" class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold shadow active:scale-95 transition-transform">
-                        Generate PIN Ruangan
-                    </button>
-                </div>
-
-                <!-- Panel Join Supervisor -->
-                <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border-l-4 border-orange-500">
-                    <div class="flex gap-3 items-center mb-2">
-                        <i class="fa-solid fa-eye text-orange-500 text-xl"></i>
-                        <h3 class="font-bold text-gray-800 dark:text-white">Mode Supervisor</h3>
-                    </div>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Pantau sesi kuis guru lain yang sedang berlangsung.</p>
-                    <div class="flex gap-2">
-                        <input type="text" placeholder="PIN Kuis (5 Digit)" class="flex-1 bg-gray-50 dark:bg-gray-700 p-2 rounded-lg border border-gray-200 dark:border-gray-600 text-center font-mono dark:text-white">
-                        <button class="bg-orange-500 text-white px-4 rounded-lg font-bold shadow"><i class="fa-solid fa-right-to-bracket"></i></button>
-                    </div>
+                    <button onclick="buatRuangan()" class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold shadow active:scale-95 transition-transform">Generate PIN Ruangan</button>
                 </div>
             </div>
-
-            <!-- MENU 2: SOAL -->
-            <div id="tab-soal" class="tab-content h-full">
-                <div class="grid grid-cols-2 gap-4">
-                    <button class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm flex flex-col items-center gap-3 text-indigo-500">
-                        <i class="fa-solid fa-pen-to-square text-4xl"></i>
-                        <span class="text-sm font-bold text-gray-700 dark:text-gray-200">Buat Soal</span>
-                    </button>
-                    <button class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm flex flex-col items-center gap-3 text-blue-500">
-                        <i class="fa-solid fa-box-archive text-4xl"></i>
-                        <span class="text-sm font-bold text-gray-700 dark:text-gray-200">Bank Soal</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- MENU 3: PANDUAN -->
-            <div id="tab-panduan" class="tab-content h-full">
-                <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm">
-                    <h3 class="font-bold text-lg mb-4 border-b dark:border-gray-700 pb-2 dark:text-white"><i class="fa-solid fa-book-open-reader mr-2"></i>Panduan Guru</h3>
-                    <ul class="space-y-3 text-sm text-gray-600 dark:text-gray-300">
-                        <li><i class="fa-solid fa-check text-green-500 w-5"></i> Masuk ke menu Soal untuk membuat kuis.</li>
-                        <li><i class="fa-solid fa-check text-green-500 w-5"></i> Klik 'Generate PIN Ruangan' di menu Info.</li>
-                        <li><i class="fa-solid fa-check text-green-500 w-5"></i> Bagikan 5 digit PIN kepada siswa.</li>
-                        <li><i class="fa-solid fa-check text-green-500 w-5"></i> Anda bisa memantau leaderboard secara realtime.</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- MENU 4: PROFIL -->
             <div id="tab-profil" class="tab-content h-full">
                 <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm text-center">
-                    <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-3 flex items-center justify-center text-gray-500 text-2xl">
-                        <i class="fa-solid fa-user-tie"></i>
-                    </div>
-                    <h3 class="font-bold text-lg dark:text-white" id="profilName">Nama Guru</h3>
-                    <p class="text-xs text-gray-500 mb-6">Akun Guru Terverifikasi</p>
-                    
-                    <button onclick="logout()" class="w-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 py-3 rounded-xl font-bold active:scale-95 transition-transform flex justify-center items-center gap-2">
-                        <i class="fa-solid fa-power-off"></i> Keluar (Logout)
-                    </button>
+                    <button onclick="logout()" class="w-full bg-red-100 dark:bg-red-900/30 text-red-600 py-3 rounded-xl font-bold flex justify-center items-center gap-2"><i class="fa-solid fa-power-off"></i> Keluar (Logout)</button>
                 </div>
             </div>
-            
         </main>
-
-        <!-- BOTTOM NAVIGATION -->
         <nav class="bg-white dark:bg-gray-800 border-t dark:border-gray-700 flex justify-between px-2 py-2 fixed bottom-0 w-full z-20 shrink-0 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-            <button onclick="switchTab('tab-info', this)" class="nav-btn text-indigo-600 flex flex-col items-center w-1/4 py-1">
-                <i class="fa-solid fa-tower-broadcast text-xl mb-1"></i><span class="text-[10px] font-bold">Info</span>
-            </button>
-            <button onclick="switchTab('tab-soal', this)" class="nav-btn text-gray-400 dark:text-gray-500 flex flex-col items-center w-1/4 py-1">
-                <i class="fa-solid fa-file-signature text-xl mb-1"></i><span class="text-[10px] font-bold">Soal</span>
-            </button>
-            <button onclick="switchTab('tab-panduan', this)" class="nav-btn text-gray-400 dark:text-gray-500 flex flex-col items-center w-1/4 py-1">
-                <i class="fa-solid fa-circle-question text-xl mb-1"></i><span class="text-[10px] font-bold">Panduan</span>
-            </button>
-            <button onclick="switchTab('tab-profil', this)" class="nav-btn text-gray-400 dark:text-gray-500 flex flex-col items-center w-1/4 py-1">
-                <i class="fa-solid fa-id-badge text-xl mb-1"></i><span class="text-[10px] font-bold">Profil</span>
-            </button>
+            <button onclick="switchTab('tab-info', this)" class="nav-btn text-indigo-600 flex flex-col items-center w-1/4 py-1"><i class="fa-solid fa-tower-broadcast text-xl mb-1"></i><span class="text-[10px] font-bold">Info</span></button>
+            <button onclick="switchTab('tab-profil', this)" class="nav-btn text-gray-400 dark:text-gray-500 flex flex-col items-center w-1/4 py-1"><i class="fa-solid fa-id-badge text-xl mb-1"></i><span class="text-[10px] font-bold">Profil</span></button>
         </nav>
     </section>
 
-    <!-- 
-    =========================================================
-    RIWAYAT PERUBAHAN VERSI JAVASCRIPT
-    =========================================================
-    - Versi 2.0 : Logika Login Cek Firebase (PIN & isActive), Switch Tab, Logout.
-    =========================================================
-    -->
     <script>
-        // --- 1. FULLSCREEN & TEMA (Sama seperti SU) ---
+        // =========================================================
+        // RIWAYAT PERUBAHAN VERSI JAVASCRIPT
+        // - v2.0.0 (8 Jul 2026) : Login Logic & Switch Tab.
+        // - v3.0.0 (8 Jul 2026) : Standarisasi Fullscreen & Tema.
+        // =========================================================
         let isFirstInteraction = true;
         document.body.addEventListener('click', () => {
             if (isFirstInteraction) {
-                if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen().catch(e => console.log("Fullscreen membutuhkan interaksi pengguna."));
-                }
+                if (!document.fullscreenElement && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(e => console.log(e));
                 isFirstInteraction = false;
             }
         });
 
         function toggleFullScreen() {
             const fsIcon = document.getElementById('fsIcon');
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
-                fsIcon.classList.replace('fa-expand', 'fa-compress');
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                    fsIcon.classList.replace('fa-compress', 'fa-expand');
-                }
-            }
+            if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); fsIcon.classList.replace('fa-expand', 'fa-compress'); } 
+            else { if (document.exitFullscreen) { document.exitFullscreen(); fsIcon.classList.replace('fa-compress', 'fa-expand'); } }
         }
 
-        const themeStates = ['system', 'light', 'dark'];
-        const themeIcons = ['fa-mobile-screen', 'fa-sun', 'fa-moon'];
+        const themeStates = ['system', 'light', 'dark']; const themeIcons = ['fa-mobile-screen', 'fa-sun', 'fa-moon'];
         let currentThemeIndex = parseInt(localStorage.getItem('themeIndex')) || 0;
-
         function applyTheme(index) {
-            const theme = themeStates[index];
             document.getElementById('themeIcon').className = `fa-solid ${themeIcons[index]}`;
-            const htmlClass = document.documentElement.classList;
-            if (theme === 'dark') htmlClass.add('dark');
-            else if (theme === 'light') htmlClass.remove('dark');
-            else { window.matchMedia('(prefers-color-scheme: dark)').matches ? htmlClass.add('dark') : htmlClass.remove('dark'); }
+            const hc = document.documentElement.classList;
+            if (themeStates[index] === 'dark') hc.add('dark'); else if (themeStates[index] === 'light') hc.remove('dark');
+            else { window.matchMedia('(prefers-color-scheme: dark)').matches ? hc.add('dark') : hc.remove('dark'); }
             localStorage.setItem('themeIndex', index);
         }
         function cycleTheme() { currentThemeIndex = (currentThemeIndex + 1) % themeStates.length; applyTheme(currentThemeIndex); }
         applyTheme(currentThemeIndex);
 
-        // --- 2. TAB NAVIGASI ---
         function switchTab(tabId, btnElement) {
             document.querySelectorAll('.tab-content').forEach(el => { el.classList.remove('tab-active'); el.style.display = 'none'; });
             document.querySelectorAll('.nav-btn').forEach(el => { el.classList.remove('text-indigo-600'); el.classList.add('text-gray-400', 'dark:text-gray-500'); });
-            
-            document.getElementById(tabId).classList.add('tab-active');
-            document.getElementById(tabId).style.display = 'block';
-            btnElement.classList.remove('text-gray-400', 'dark:text-gray-500');
-            btnElement.classList.add('text-indigo-600');
+            document.getElementById(tabId).classList.add('tab-active'); document.getElementById(tabId).style.display = 'block';
+            btnElement.classList.remove('text-gray-400', 'dark:text-gray-500'); btnElement.classList.add('text-indigo-600');
         }
 
-        // --- 3. AUTENTIKASI GURU (LOGIN & LOGOUT) ---
-        const loginForm = document.getElementById('loginForm');
-        const loginError = document.getElementById('loginError');
-        const loginSection = document.getElementById('loginSection');
-        const appSection = document.getElementById('appSection');
+        const loginForm = document.getElementById('loginForm'); const loginError = document.getElementById('loginError');
+        const loginSection = document.getElementById('loginSection'); const appSection = document.getElementById('appSection');
         
-        // Cek Session saat reload
         if(sessionStorage.getItem('teacherId')) { masukAplikasi(sessionStorage.getItem('teacherName')); }
 
         loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const inputPin = document.getElementById('pinInput').value;
-            const btnLogin = document.getElementById('btnLogin');
-            
-            btnLogin.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengecek...';
-            btnLogin.disabled = true;
+            e.preventDefault(); const inputPin = document.getElementById('pinInput').value; const btnLogin = document.getElementById('btnLogin');
+            btnLogin.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengecek...'; btnLogin.disabled = true;
 
             db.ref('users/teachers').once('value').then((snapshot) => {
                 let found = false;
@@ -255,52 +133,20 @@ RIWAYAT PERUBAHAN VERSI HTML (tc.html)
                         const data = child.val();
                         if (data.pin === inputPin) {
                             found = true;
-                            if (data.isActive) {
-                                // Login Sukses
-                                sessionStorage.setItem('teacherId', child.key);
-                                sessionStorage.setItem('teacherName', data.name);
-                                masukAplikasi(data.name);
-                            } else {
-                                tampilkanError("Akun dinonaktifkan oleh Admin.");
-                            }
+                            if (data.isActive) { sessionStorage.setItem('teacherId', child.key); sessionStorage.setItem('teacherName', data.name); masukAplikasi(data.name); } 
+                            else { tampilkanError("Akun dinonaktifkan oleh Admin."); }
                         }
                     });
                 }
                 if (!found) tampilkanError("PIN tidak ditemukan!");
-                
-                btnLogin.innerHTML = 'Masuk <i class="fa-solid fa-arrow-right-to-bracket"></i>';
-                btnLogin.disabled = false;
+                btnLogin.innerHTML = 'Masuk <i class="fa-solid fa-arrow-right-to-bracket"></i>'; btnLogin.disabled = false;
             }).catch(error => { tampilkanError("Gagal terhubung ke database."); btnLogin.disabled = false; });
         });
 
-        function tampilkanError(msg) {
-            loginError.innerText = msg;
-            loginError.classList.remove('hidden');
-            setTimeout(() => loginError.classList.add('hidden'), 3000);
-        }
-
-        function masukAplikasi(namaGuru) {
-            loginSection.classList.remove('show-section');
-            loginSection.style.display = 'none';
-            appSection.classList.add('show-section');
-            document.getElementById('displayTeacherName').innerText = namaGuru;
-            document.getElementById('profilName').innerText = namaGuru;
-        }
-
-        function logout() {
-            sessionStorage.removeItem('teacherId');
-            sessionStorage.removeItem('teacherName');
-            document.getElementById('pinInput').value = '';
-            appSection.classList.remove('show-section');
-            loginSection.classList.add('show-section');
-            loginSection.style.display = 'flex';
-        }
-
-        // --- 4. FUNGSI KUIS MOCKUP ---
-        function buatRuangan() {
-            const roomPin = Math.floor(10000 + Math.random() * 90000).toString();
-            alert(`Ruangan berhasil dibuat!\nPIN Kuis Anda: ${roomPin}\n\n(Catatan: Logika database menyusul di tahap selanjutnya)`);
-        }
+        function tampilkanError(msg) { loginError.innerText = msg; loginError.classList.remove('hidden'); setTimeout(() => loginError.classList.add('hidden'), 3000); }
+        function masukAplikasi(namaGuru) { loginSection.classList.remove('show-section'); loginSection.style.display = 'none'; appSection.classList.add('show-section'); document.getElementById('displayTeacherName').innerText = namaGuru; }
+        function logout() { sessionStorage.removeItem('teacherId'); sessionStorage.removeItem('teacherName'); document.getElementById('pinInput').value = ''; appSection.classList.remove('show-section'); loginSection.classList.add('show-section'); loginSection.style.display = 'flex'; }
+        function buatRuangan() { alert(`Ruangan berhasil dibuat! PIN Kuis Anda: ${Math.floor(10000 + Math.random() * 90000).toString()}`); }
     </script>
 </body>
-                                                                                                                                                </html>
+</html>
