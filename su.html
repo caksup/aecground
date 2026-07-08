@@ -1,13 +1,3 @@
-<!-- 
-=========================================================
-RIWAYAT PERUBAHAN VERSI HTML
-=========================================================
-- Versi 1.0 : Inisialisasi awal UI Superuser.
-- Versi 2.0 : Perombakan layout dengan Sidebar Desktop.
-- Versi 2.1 : Rombak total ke Mobile-First (Style WA), Navigasi Bawah.
-- Versi 2.2 : Tombol Fullscreen di Header (tanpa overlay), Tema 1 tombol dinamis, Fitur Edit Guru aktif, fungsionalitas menu diperbaiki.
-=========================================================
--->
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -15,29 +5,22 @@ RIWAYAT PERUBAHAN VERSI HTML
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SU Panel - Kuis Pro</title>
     
-    <!-- Versi 2.1 : Tailwind CSS (Konfigurasi Dark Mode via Class) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: { wa_teal: '#075e54', wa_light: '#dcf8c6' }
-                }
-            }
-        }
-    </script>
-    
-    <!-- Versi 2.1 : FontAwesome Icons -->
+    <script>tailwind.config = { darkMode: 'class', theme: { extend: { colors: { wa_teal: '#075e54', wa_light: '#dcf8c6' } } } }</script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Versi 1.0 : Firebase SDK & Config -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     <script src="firebase-config.js"></script>
     
     <style>
-        /* Versi 2.1 : CSS Custom Halaman */
+        /*
+        =========================================================
+        RIWAYAT PERUBAHAN VERSI CSS
+        - v2.1.0 (6 Jul 2026) : Setup Tab Content dan fadeIn animation.
+        - v3.0.0 (8 Jul 2026) : Hide scrollbar webkit standar.
+        =========================================================
+        */
         ::-webkit-scrollbar { display: none; }
         .tab-content { display: none; animation: fadeIn 0.2s ease-in-out; }
         .tab-active { display: block; }
@@ -46,30 +29,17 @@ RIWAYAT PERUBAHAN VERSI HTML
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 h-screen flex flex-col overflow-hidden transition-colors duration-300">
 
-    <!-- Versi 2.2 : HEADER dengan Tombol Fullscreen & Tema Tunggal -->
     <header class="bg-wa_teal dark:bg-gray-800 text-white p-4 shadow-md flex justify-between items-center z-10 shrink-0">
-        <div class="font-bold text-lg flex items-center gap-2">
-            <i class="fa-solid fa-user-shield fa-fade"></i> SU Panel
-        </div>
-        
+        <div class="font-bold text-lg flex items-center gap-2"><i class="fa-solid fa-user-shield fa-fade"></i> SU Panel</div>
         <div class="flex space-x-6 text-xl items-center">
-            <!-- Ikon Siklus Tema -->
-            <button id="btnThemeToggle" onclick="cycleTheme()" class="hover:text-yellow-300 transition" title="Ganti Tema">
-                <i id="themeIcon" class="fa-solid fa-mobile-screen"></i>
-            </button>
-            <!-- Ikon Fullscreen -->
-            <button onclick="toggleFullScreen()" class="hover:text-blue-300 transition" title="Layar Penuh">
-                <i id="fsIcon" class="fa-solid fa-expand"></i>
-            </button>
+            <button id="btnThemeToggle" onclick="cycleTheme()" class="hover:text-yellow-300 transition"><i id="themeIcon" class="fa-solid fa-mobile-screen"></i></button>
+            <button onclick="toggleFullScreen()" class="hover:text-blue-300 transition"><i id="fsIcon" class="fa-solid fa-expand"></i></button>
         </div>
     </header>
 
-    <!-- Versi 2.1 : KONTEN UTAMA -->
     <main class="flex-1 overflow-y-auto p-4 pb-20 relative space-y-4">
         
-        <!-- MENU 1: GURU -->
         <div id="tab-guru" class="tab-content tab-active">
-            <!-- Form Tambah/Edit Guru -->
             <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm mb-4 border-l-4 border-wa_teal">
                 <form id="teacherForm" class="flex items-center gap-2">
                     <div class="flex-1">
@@ -83,14 +53,9 @@ RIWAYAT PERUBAHAN VERSI HTML
                     </button>
                 </form>
             </div>
-
-            <!-- List Guru (WA Chat Style) -->
-            <div id="teacherList" class="space-y-3">
-                <!-- Data Realtime -->
-            </div>
+            <div id="teacherList" class="space-y-3"></div>
         </div>
 
-        <!-- MENU 2: SOAL (Dilengkapi fungsi alert mockup) -->
         <div id="tab-soal" class="tab-content">
             <div class="grid grid-cols-2 gap-4">
                 <button onclick="alert('Menu Pembuatan Soal akan segera dibuka!')" class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm flex flex-col items-center gap-3 text-wa_teal dark:text-green-400 active:scale-95 transition-transform">
@@ -104,7 +69,6 @@ RIWAYAT PERUBAHAN VERSI HTML
             </div>
         </div>
 
-        <!-- MENU 3: SETTING -->
         <div id="tab-setting" class="tab-content">
             <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm space-y-4">
                 <div class="flex items-center gap-3 border-b dark:border-gray-700 pb-3">
@@ -121,7 +85,6 @@ RIWAYAT PERUBAHAN VERSI HTML
             </div>
         </div>
 
-        <!-- MENU 4: RIWAYAT -->
         <div id="tab-riwayat" class="tab-content">
             <div class="grid grid-cols-2 gap-3 mb-4">
                 <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm text-center">
@@ -136,36 +99,24 @@ RIWAYAT PERUBAHAN VERSI HTML
                 </div>
             </div>
             <button onclick="alert('Memuat Leaderboard Global...')" class="w-full bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm flex items-center justify-between active:bg-gray-50 dark:active:bg-gray-700">
-                <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-trophy text-yellow-500 text-2xl"></i>
-                    <span class="font-bold text-sm dark:text-white">Leaderboard Global</span>
-                </div>
+                <div class="flex items-center gap-3"><i class="fa-solid fa-trophy text-yellow-500 text-2xl"></i><span class="font-bold text-sm dark:text-white">Leaderboard Global</span></div>
                 <i class="fa-solid fa-chevron-right text-gray-400"></i>
             </button>
         </div>
 
-        <!-- MENU 5: VERSI -->
         <div id="tab-versi" class="tab-content">
             <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
                 <div class="flex gap-4 items-start mb-6">
                     <i class="fa-solid fa-rocket text-wa_teal text-xl mt-1"></i>
                     <div>
-                        <h3 class="font-bold dark:text-white">Versi 2.2 <span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full ml-1">Terbaru</span></h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Fullscreen Navbar, Tema Dinamis, Edit Guru.</p>
-                    </div>
-                </div>
-                <div class="flex gap-4 items-start border-t dark:border-gray-700 pt-4">
-                    <i class="fa-solid fa-check-circle text-gray-400 text-xl mt-1"></i>
-                    <div>
-                        <h3 class="font-bold text-gray-600 dark:text-gray-300">Versi 2.1</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Rombak UI Mobile-First Whatsapp Style.</p>
+                        <h3 class="font-bold dark:text-white">Versi 3.0.0 <span class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full ml-1">Terbaru</span></h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Standarisasi penuh kode repository dengan log versi HTML/CSS/JS.</p>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Versi 2.1 : BOTTOM NAVIGATION -->
     <nav class="bg-white dark:bg-gray-800 border-t dark:border-gray-700 flex justify-between px-2 py-2 fixed bottom-0 w-full z-20 shrink-0 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
         <button id="nav-guru" onclick="switchTab('tab-guru', this)" class="nav-btn text-wa_teal flex flex-col items-center w-1/5 py-1">
             <i class="fa-solid fa-user-tie text-xl mb-1"></i><span class="text-[10px] font-bold">Guru</span>
@@ -184,191 +135,115 @@ RIWAYAT PERUBAHAN VERSI HTML
         </button>
     </nav>
 
-    <!-- 
-    =========================================================
-    RIWAYAT PERUBAHAN VERSI JAVASCRIPT
-    =========================================================
-    - Versi 2.2 : Auto Fullscreen Event, Logic Siklus Tema 1 Tombol, Fitur Edit Form Guru.
-    =========================================================
-    -->
     <script>
-        // --- 1. FULLSCREEN OTOMATIS & MANUAL ---
-        // Mencoba fullscreen otomatis pada klik pertama pengguna (kebijakan browser)
+        // =========================================================
+        // RIWAYAT PERUBAHAN VERSI JAVASCRIPT
+        // - v2.1.0 (6 Jul 2026) : CRUD Firebase Guru awal.
+        // - v2.2.0 (8 Jul 2026) : Fullscreen Event, Fitur Edit Guru.
+        // - v3.0.0 (8 Jul 2026) : Strukturisasi logika dan penyematan header riwayat.
+        // =========================================================
+
         let isFirstInteraction = true;
         document.body.addEventListener('click', () => {
             if (isFirstInteraction) {
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen().catch(e => console.log("Fullscreen membutuhkan interaksi pengguna spesifik."));
-                }
+                if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e => console.log("Fullscreen membutuhkan interaksi"));
                 isFirstInteraction = false;
             }
         });
 
-        // Toggle Fullscreen dari tombol header
         function toggleFullScreen() {
             const fsIcon = document.getElementById('fsIcon');
             if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
-                fsIcon.classList.replace('fa-expand', 'fa-compress');
+                document.documentElement.requestFullscreen(); fsIcon.classList.replace('fa-expand', 'fa-compress');
             } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                    fsIcon.classList.replace('fa-compress', 'fa-expand');
-                }
+                if (document.exitFullscreen) { document.exitFullscreen(); fsIcon.classList.replace('fa-compress', 'fa-expand'); }
             }
         }
 
-        // --- 2. SIKLUS TEMA (Sistem -> Terang -> Gelap) ---
         const themeStates = ['system', 'light', 'dark'];
         const themeIcons = ['fa-mobile-screen', 'fa-sun', 'fa-moon'];
         let currentThemeIndex = parseInt(localStorage.getItem('themeIndex')) || 0;
 
         function applyTheme(index) {
             const theme = themeStates[index];
-            const iconEl = document.getElementById('themeIcon');
+            document.getElementById('themeIcon').className = `fa-solid ${themeIcons[index]}`;
             const htmlClass = document.documentElement.classList;
-
-            // Update Ikon
-            iconEl.className = `fa-solid ${themeIcons[index]}`;
-
-            if (theme === 'dark') {
-                htmlClass.add('dark');
-            } else if (theme === 'light') {
-                htmlClass.remove('dark');
-            } else {
-                // System default
-                if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    htmlClass.add('dark');
-                } else {
-                    htmlClass.remove('dark');
-                }
-            }
+            if (theme === 'dark') htmlClass.add('dark');
+            else if (theme === 'light') htmlClass.remove('dark');
+            else { window.matchMedia('(prefers-color-scheme: dark)').matches ? htmlClass.add('dark') : htmlClass.remove('dark'); }
             localStorage.setItem('themeIndex', index);
         }
-
-        function cycleTheme() {
-            currentThemeIndex = (currentThemeIndex + 1) % themeStates.length;
-            applyTheme(currentThemeIndex);
-        }
-        
-        // Terapkan tema saat awal dimuat
+        function cycleTheme() { currentThemeIndex = (currentThemeIndex + 1) % themeStates.length; applyTheme(currentThemeIndex); }
         applyTheme(currentThemeIndex);
 
-        // --- 3. TAB NAVIGASI ---
         function switchTab(tabId, btnElement) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('tab-active'));
             document.querySelectorAll('.nav-btn').forEach(el => {
-                el.classList.remove('text-wa_teal');
-                el.classList.add('text-gray-400', 'dark:text-gray-500');
+                el.classList.remove('text-wa_teal'); el.classList.add('text-gray-400', 'dark:text-gray-500');
             });
-            
             document.getElementById(tabId).classList.add('tab-active');
             btnElement.classList.remove('text-gray-400', 'dark:text-gray-500');
             btnElement.classList.add('text-wa_teal');
         }
 
-        // --- 4. FIREBASE MANAJEMEN GURU (Tambah, Edit, Hapus) ---
         const tForm = document.getElementById('teacherForm');
         const tList = document.getElementById('teacherList');
         const btnSubmitTeacher = document.getElementById('btnSubmitTeacher');
         const submitIcon = document.getElementById('submitIcon');
         const teachersRef = db.ref('users/teachers');
-        
-        let editingId = null; // Menyimpan ID guru jika sedang mode edit
+        let editingId = null; 
 
-        // Fungsi Tambah / Simpan Edit
         tForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const name = document.getElementById('tName').value;
             const pin = document.getElementById('tPin').value;
-
             if (editingId) {
-                // Mode Update (Edit)
                 teachersRef.child(editingId).update({ name: name, pin: pin }).then(() => {
-                    tForm.reset();
-                    editingId = null;
-                    submitIcon.className = "fa-solid fa-user-plus";
-                    btnSubmitTeacher.classList.replace('bg-blue-600', 'bg-wa_teal');
+                    tForm.reset(); editingId = null; submitIcon.className = "fa-solid fa-user-plus"; btnSubmitTeacher.classList.replace('bg-blue-600', 'bg-wa_teal');
                 });
-            } else {
-                // Mode Tambah Baru
-                teachersRef.push({ name: name, pin: pin, isActive: true }).then(() => tForm.reset());
-            }
+            } else { teachersRef.push({ name: name, pin: pin, isActive: true }).then(() => tForm.reset()); }
         });
 
-        // Trigger Mode Edit
         window.editGuru = function(id, name, pin) {
-            editingId = id;
-            document.getElementById('tName').value = name;
-            document.getElementById('tPin').value = pin;
-            
-            // Ubah gaya tombol untuk menandakan mode edit
-            submitIcon.className = "fa-solid fa-check";
-            btnSubmitTeacher.classList.replace('bg-wa_teal', 'bg-blue-600');
-            
-            // Arahkan otomatis kembali ke atas (Form)
+            editingId = id; document.getElementById('tName').value = name; document.getElementById('tPin').value = pin;
+            submitIcon.className = "fa-solid fa-check"; btnSubmitTeacher.classList.replace('bg-wa_teal', 'bg-blue-600');
             document.getElementById('tab-guru').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // Realtime Read Data
         teachersRef.on('value', (snapshot) => {
-            tList.innerHTML = '';
-            let totalGuru = 0;
-            
+            tList.innerHTML = ''; let totalGuru = 0;
             if (snapshot.exists()) {
                 snapshot.forEach((child) => {
-                    totalGuru++;
-                    const tId = child.key;
-                    const tData = child.val();
-                    
+                    totalGuru++; const tId = child.key; const tData = child.val();
                     const statusIcon = tData.isActive 
                         ? `<i class="fa-solid fa-toggle-on text-2xl text-green-500 cursor-pointer" onclick="toggleGuru('${tId}', true)" title="Aktif"></i>` 
                         : `<i class="fa-solid fa-toggle-off text-2xl text-gray-400 dark:text-gray-600 cursor-pointer" onclick="toggleGuru('${tId}', false)" title="Non-Aktif"></i>`;
-                    
                     tList.innerHTML += `
                         <div class="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm flex items-center justify-between border-l-4 ${tData.isActive ? 'border-green-500' : 'border-gray-400'}">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-500">
-                                    <i class="fa-solid fa-user text-sm"></i>
-                                </div>
+                                <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-500"><i class="fa-solid fa-user text-sm"></i></div>
                                 <div>
                                     <h4 class="font-bold text-sm dark:text-white leading-tight">${tData.name}</h4>
-                                    <div class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
-                                        <i class="fa-solid fa-key mr-1"></i><span class="font-mono font-bold tracking-widest text-wa_teal">${tData.pin}</span>
-                                    </div>
+                                    <div class="text-[11px] text-gray-500 dark:text-gray-400 mt-1"><i class="fa-solid fa-key mr-1"></i><span class="font-mono font-bold tracking-widest text-wa_teal">${tData.pin}</span></div>
                                 </div>
                             </div>
-                            
                             <div class="flex items-center gap-3">
                                 ${statusIcon}
-                                <!-- Tombol Edit -->
-                                <button onclick="editGuru('${tId}', '${tData.name}', '${tData.pin}')" class="text-blue-500 hover:text-blue-700 transition">
-                                    <i class="fa-solid fa-pen-to-square"></i>
-                                </button>
-                                <!-- Tombol Hapus -->
-                                <button onclick="hapusGuru('${tId}')" class="text-red-500 hover:text-red-700 transition">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </button>
+                                <button onclick="editGuru('${tId}', '${tData.name}', '${tData.pin}')" class="text-blue-500 hover:text-blue-700 transition"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button onclick="hapusGuru('${tId}')" class="text-red-500 hover:text-red-700 transition"><i class="fa-solid fa-trash-can"></i></button>
                             </div>
                         </div>
                     `;
                 });
-            } else {
-                tList.innerHTML = `<div class="text-center text-gray-400 text-sm mt-8"><i class="fa-solid fa-box-open text-3xl mb-2 block"></i>Belum ada data guru</div>`;
-            }
-            // Update statistik total guru di Menu Riwayat
+            } else { tList.innerHTML = `<div class="text-center text-gray-400 text-sm mt-8"><i class="fa-solid fa-box-open text-3xl mb-2 block"></i>Belum ada data guru</div>`; }
             document.getElementById('statGuruCount').innerText = totalGuru;
         });
 
-        // Fungsi Hapus & Toggle
         window.hapusGuru = function(id) { if(confirm('Hapus akun guru ini?')) { teachersRef.child(id).remove(); } }
         window.toggleGuru = function(id, currentStatus) { teachersRef.child(id).update({ isActive: !currentStatus }); }
-
-        // --- 5. FUNGSI SETTING MOCKUP ---
         window.simpanSetting = function() {
-            const pengumuman = document.getElementById('setPengumuman').value;
-            const infoLogin = document.getElementById('setInfoLogin').value;
-            alert(`Setting berhasil disimpan di Firebase!\nPengumuman: ${pengumuman || '-'}\nInfo Login: ${infoLogin || '-'}`);
+            const pengumuman = document.getElementById('setPengumuman').value; const infoLogin = document.getElementById('setInfoLogin').value;
+            alert(`Setting disimpan!\nPengumuman: ${pengumuman}\nInfo Login: ${infoLogin}`);
         }
     </script>
 </body>
