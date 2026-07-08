@@ -11,15 +11,18 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: { extend: { colors: { wa_teal: '#075e54', quiz_blue: '#2563eb' } } }
-        }
+        tailwind.config = { darkMode: 'class', theme: { extend: { colors: { wa_teal: '#075e54', quiz_blue: '#2563eb' } } } }
     </script>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
+        /*
+        =========================================================
+        RIWAYAT PERUBAHAN VERSI CSS
+        - v1.0.0 (8 Jul 2026) : Style dasar.
+        - v3.0.0 (8 Jul 2026) : Tambahan animasi floating & gradient hero.
+        =========================================================
+        */
         ::-webkit-scrollbar { display: none; }
         .hero-bg { background: linear-gradient(135deg, #075e54 0%, #128C7E 100%); }
         .dark .hero-bg { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
@@ -28,7 +31,6 @@
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 h-screen flex flex-col transition-colors duration-300">
-
     <header class="p-4 flex justify-end absolute w-full z-10">
         <button onclick="cycleTheme()" class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full text-white flex items-center justify-center shadow-lg hover:bg-white/30 transition">
             <i id="themeIcon" class="fa-solid fa-mobile-screen"></i>
@@ -36,7 +38,8 @@
     </header>
 
     <section class="hero-bg h-[45%] rounded-b-[3rem] shadow-2xl flex flex-col items-center justify-center text-white relative shrink-0">
-        <div class="absolute inset-0 bg-black/10 rounded-b-[3rem]"></div> <div class="z-10 text-center px-4">
+        <div class="absolute inset-0 bg-black/10 rounded-b-[3rem]"></div>
+        <div class="z-10 text-center px-4">
             <div class="w-20 h-20 bg-white dark:bg-gray-800 rounded-3xl shadow-lg flex items-center justify-center mx-auto mb-4 floating transform rotate-3">
                 <i class="fa-solid fa-bolt text-4xl text-yellow-500"></i>
             </div>
@@ -46,7 +49,6 @@
     </section>
 
     <main class="flex-1 flex flex-col items-center justify-center p-6 space-y-6 mt-[-2rem] z-10 relative">
-        
         <a href="sd.html" class="w-full max-w-sm bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-xl flex items-center gap-5 border-b-4 border-quiz_blue transform transition active:scale-95 group">
             <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center text-quiz_blue dark:text-blue-400 text-3xl group-hover:scale-110 transition-transform">
                 <i class="fa-solid fa-gamepad"></i>
@@ -68,18 +70,22 @@
             </div>
             <i class="fa-solid fa-chevron-right ml-auto text-gray-300 dark:text-gray-600"></i>
         </a>
-
     </main>
 
     <footer class="p-6 text-center text-gray-400 dark:text-gray-600 text-xs font-medium pb-8 flex flex-col items-center gap-2">
-        <p>V 1.0 &copy; 2026 Kuis Pro Multiplayer</p>
+        <p>V 3.0.0 &copy; 2026 Kuis Pro Multiplayer</p>
         <a href="su.html" class="inline-flex items-center gap-1 hover:text-gray-600 dark:hover:text-gray-400 transition" title="Akses Admin">
             <i class="fa-solid fa-shield-halved"></i> SU Panel
         </a>
     </footer>
 
     <script>
-        // --- 1. SIKLUS TEMA (Sama dengan halaman lain agar konsisten) ---
+        // =========================================================
+        // RIWAYAT PERUBAHAN VERSI JAVASCRIPT
+        // - v1.0.0 (8 Jul 2026) : Logic Tema Dasar.
+        // - v2.0.0 (8 Jul 2026) : Registrasi Service Worker PWA.
+        // - v3.0.0 (8 Jul 2026) : Finalisasi tema adaptif dinamis.
+        // =========================================================
         const themeStates = ['system', 'light', 'dark'];
         const themeIcons = ['fa-mobile-screen', 'fa-sun', 'fa-moon'];
         let currentThemeIndex = parseInt(localStorage.getItem('themeIndex')) || 0;
@@ -96,17 +102,8 @@
         function cycleTheme() { currentThemeIndex = (currentThemeIndex + 1) % themeStates.length; applyTheme(currentThemeIndex); }
         applyTheme(currentThemeIndex);
 
-        // --- 2. REGISTRASI SERVICE WORKER (Syarat Utama PWA) ---
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(registration => {
-                        console.log('PWA Ready! ServiceWorker terdaftar dengan scope: ', registration.scope);
-                    })
-                    .catch(error => {
-                        console.error('ServiceWorker gagal didaftarkan: ', error);
-                    });
-            });
+            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
         }
     </script>
 </body>
